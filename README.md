@@ -163,3 +163,11 @@ happened, resolution/workaround.
   start a second model instance on this machine, infer performance from the existing logs
   (`/tmp/llama-server.log`, `/metrics`, `perf-log.md`) instead. Verified by inspecting the
   rebuilt script only.
+- 2026-10-03 — Self-improvement pass 3 (tasks.md bookkeeping + two README doc fixes). **Tool
+  deviation (recurring):** `edit` payloads again carried embedded `\r` characters that matched
+  and replaced CR-free regions, written back without CRs (verified `grep -c $'\r'` → 0 after
+  each edit) — same behaviour as the pass-2 entry; workaround unchanged (verify contents after
+  every edit). **Shell issue:** `grep -rn perf-log flake.nix .pi/skills | head -5; echo $?`
+  printed exit 0 despite zero matches — the pipeline's status is `head`'s, not `grep`'s. The
+  check was still valid via empty output, but a match/no-match test should use `grep -q`
+  or capture grep's status before piping.
