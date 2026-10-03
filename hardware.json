@@ -1,0 +1,348 @@
+[
+  {
+    "type": "Title",
+    "result": {
+      "userId": 1000,
+      "userName": "ivan",
+      "fullUserName": "Ivan Hawkes",
+      "hostName": "lythir",
+      "homeDir": "/home/ivan/",
+      "exePath": "/nix/store/86j7n0si4bnw172nmxrf4c1p393kqakb-fastfetch-unwrapped-2.68.1/bin/fastfetch",
+      "userShell": "/run/current-system/sw/bin/zsh",
+      "pid": 12360,
+      "cwd": "/home/ivan/flakes/llama-cpp/"
+    }
+  },
+  {
+    "type": "Separator",
+    "error": "Unsupported for JSON format"
+  },
+  {
+    "type": "OS",
+    "result": {
+      "buildID": "26.11.20260926.e158d9e",
+      "codename": "zokor",
+      "id": "nixos",
+      "idLike": "",
+      "name": "NixOS",
+      "prettyName": "NixOS 26.11 (Zokor)",
+      "variant": "",
+      "variantID": "",
+      "version": "26.11 (Zokor)",
+      "versionID": "26.11"
+    }
+  },
+  {
+    "type": "Host",
+    "error": "neither product_family nor product_name is set by O.E.M."
+  },
+  {
+    "type": "Kernel",
+    "result": {
+      "architecture": "x86_64",
+      "name": "Linux",
+      "release": "6.18.54",
+      "version": "#1-NixOS SMP PREEMPT_DYNAMIC Fri Sep 25 14:35:54 UTC 2026",
+      "pageSize": 4096
+    }
+  },
+  {
+    "type": "Uptime",
+    "result": {
+      "uptime": 3585200,
+      "bootTime": "2026-10-03T08:52:51.421+1000"
+    }
+  },
+  {
+    "type": "Packages",
+    "result": {
+      "all": 2028,
+      "nixSystem": 1570,
+      "nixUser": 458
+    }
+  },
+  {
+    "type": "Shell",
+    "result": {
+      "exe": "/nix/store/svx59425zxp552p2b8gm11qj5r09b56i-bash-5.3p15/bin/bash",
+      "exeName": "bash",
+      "exePath": "/nix/store/svx59425zxp552p2b8gm11qj5r09b56i-bash-5.3p15/bin/bash",
+      "pid": 12358,
+      "ppid": 12302,
+      "processName": "bash",
+      "prettyName": "bash",
+      "version": "5.3.15",
+      "tty": 0
+    }
+  },
+  {
+    "type": "Display",
+    "result": [
+      {
+        "id": 908939332,
+        "name": "LG HDR QHD",
+        "primary": false,
+        "output": {
+          "width": 2560,
+          "height": 1440,
+          "refreshRate": 144.0,
+          "drrStatus": null,
+          "dpi": 120
+        },
+        "scaled": {
+          "width": 2048,
+          "height": 1152
+        },
+        "preferred": {
+          "width": 2560,
+          "height": 1440,
+          "refreshRate": 144.0
+        },
+        "physical": {
+          "width": 700,
+          "height": 390
+        },
+        "rotation": 0,
+        "bitDepth": 0,
+        "hdrStatus": "Supported",
+        "type": "External",
+        "manufactureDate": {
+          "year": 2020,
+          "week": 1
+        },
+        "serial": "0x0001BF55",
+        "platformApi": "wayland-zxdg"
+      }
+    ]
+  },
+  {
+    "type": "DE",
+    "error": "No DE found"
+  },
+  {
+    "type": "WM",
+    "result": {
+      "processName": "niri",
+      "prettyName": "niri",
+      "protocolName": "Wayland",
+      "pluginName": "",
+      "version": "26.04"
+    }
+  },
+  {
+    "type": "WMTheme",
+    "error": "Unknown WM: niri"
+  },
+  {
+    "type": "Theme",
+    "result": {
+      "theme1": "",
+      "theme2": "Gruvbox-Dark [GTK2/3/4]"
+    }
+  },
+  {
+    "type": "Icons",
+    "error": "No icons could be found"
+  },
+  {
+    "type": "Font",
+    "error": "No fonts found"
+  },
+  {
+    "type": "Cursor",
+    "result": {
+      "theme": "default",
+      "size": "24"
+    }
+  },
+  {
+    "type": "Terminal",
+    "result": {
+      "processName": "pi",
+      "exe": "pi",
+      "exeName": "pi",
+      "exePath": "/nix/store/z5piarlh57mjwr4c9w318ay97sxr6c9m-nodejs-slim-24.20.0/bin/node",
+      "pid": 12302,
+      "ppid": 3739,
+      "prettyName": "pi",
+      "version": "",
+      "tty": ""
+    }
+  },
+  {
+    "type": "TerminalFont",
+    "error": "Unknown terminal: pi"
+  },
+  {
+    "type": "CPU",
+    "result": {
+      "cpu": "AMD Ryzen 9 3900X",
+      "vendor": "AuthenticAMD",
+      "packages": 1,
+      "cores": {
+        "physical": 12,
+        "logical": 24,
+        "online": 24
+      },
+      "frequency": {
+        "base": 4522,
+        "max": 4673
+      },
+      "coreTypes": [
+        {
+          "count": 24,
+          "freq": 4673
+        }
+      ],
+      "temperature": null,
+      "march": "x86_64-v3",
+      "numaNodes": 1,
+      "codeName": "Ryzen 9 (Matisse)",
+      "technology": "TSMC N7FF"
+    }
+  },
+  {
+    "type": "GPU",
+    "result": [
+      {
+        "index": null,
+        "coreCount": null,
+        "coreUsage": null,
+        "memory": {
+          "dedicated": {
+            "total": null,
+            "used": null
+          },
+          "shared": {
+            "total": null,
+            "used": null
+          },
+          "type": null
+        },
+        "driver": "nvidia (open source) 615.71.09",
+        "name": "GeForce RTX 4060",
+        "temperature": null,
+        "type": "Discrete",
+        "vendor": "NVIDIA",
+        "platformApi": "DRM (card1)",
+        "frequency": null,
+        "deviceId": 3072,
+        "pcieSpeed": null
+      },
+      {
+        "index": null,
+        "coreCount": null,
+        "coreUsage": null,
+        "memory": {
+          "dedicated": {
+            "total": null,
+            "used": null
+          },
+          "shared": {
+            "total": null,
+            "used": null
+          },
+          "type": null
+        },
+        "driver": "nvidia (open source) 615.71.09",
+        "name": "GeForce RTX 5060 Ti",
+        "temperature": null,
+        "type": "Discrete",
+        "vendor": "NVIDIA",
+        "platformApi": "DRM (card2)",
+        "frequency": null,
+        "deviceId": 2816,
+        "pcieSpeed": null
+      }
+    ]
+  },
+  {
+    "type": "Memory",
+    "result": {
+      "total": 67327389696,
+      "used": 8286302208
+    }
+  },
+  {
+    "type": "Swap",
+    "result": []
+  },
+  {
+    "type": "Disk",
+    "result": [
+      {
+        "bytes": {
+          "available": 803911651328,
+          "free": 853884878848,
+          "total": 982292107264,
+          "used": 128407228416
+        },
+        "files": {
+          "total": 60989440,
+          "used": 2371868
+        },
+        "filesystem": "ext4",
+        "mountpoint": "/",
+        "mountFrom": "/dev/nvme1n1p2",
+        "name": "root",
+        "volumeType": [
+          "Regular"
+        ],
+        "createTime": "2026-09-26T13:26:49.000+1000"
+      },
+      {
+        "bytes": {
+          "available": 803911651328,
+          "free": 853884878848,
+          "total": 982292107264,
+          "used": 128407228416
+        },
+        "files": {
+          "total": 60989440,
+          "used": 2371868
+        },
+        "filesystem": "ext4",
+        "mountpoint": "/nix/store",
+        "mountFrom": "/dev/nvme1n1p2",
+        "name": "root",
+        "volumeType": [
+          "Subvolume",
+          "Read-only"
+        ],
+        "createTime": "2026-09-26T13:26:54.025+1000"
+      }
+    ]
+  },
+  {
+    "type": "LocalIp",
+    "result": [
+      {
+        "name": "enp6s0",
+        "defaultRoute": {
+          "ipv4": true
+        },
+        "ipv4": "10.0.10.10/24"
+      }
+    ]
+  },
+  {
+    "type": "Battery",
+    "result": []
+  },
+  {
+    "type": "PowerAdapter",
+    "result": []
+  },
+  {
+    "type": "Locale",
+    "result": "en_GB.UTF-8"
+  },
+  {
+    "type": "Break",
+    "error": "Unsupported for JSON format"
+  },
+  {
+    "type": "Colors",
+    "error": "Unsupported for JSON format"
+  }
+]

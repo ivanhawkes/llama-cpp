@@ -1,0 +1,10 @@
+# Self-improvement tasks — llama-cpp flake (2026-10-03)
+
+Facts: GPU 0=RTX 5060 Ti 16GB / 1=RTX 4060 8GB (nvidia-smi, open driver 615.71.09); CPU x86_64-v3 24T; RAM ~67GB; disk free ~804GB; hardware.json fresh (today); git root /home/ivan/flakes (monorepo), clean tree.
+
+- [x] Add `README.md` (repo layout, run-server/smoke-test usage, GPU index facts, hardware.json field definitions) — why: no README exists; LLMs debugging this repo have no entry point — verify: `test -f README.md && grep -q 'smoke-test' README.md && echo OK`
+- [x] `flake.nix` run-server: preflight guard that fails fast with a clear message if nvidia-smi index 0 is not the RTX 5060 Ti — why: `CUDA_VISIBLE_DEVICES=0` is positional; nvidia-smi shows 0=5060 Ti today but order can change, and picking the 8GB card would fail obscurely with a ~15GB model — verify: `GPU0=$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader -i 0 | head -1); case "$GPU0" in *"5060 Ti"*) echo PASS;; *) echo FAIL "$GPU0";; esac`
+- [x] `flake.nix` devShell: pin `HF_HOME = "$PWD/.hf-cache"` (+ one-line `.gitignore` entry) — why: run-server pulls a ~15GB HF model on first start; without HF_HOME the cache location is implicit per user/machine — verify: `nix eval --raw .#devShells.x86_64-linux.default.HF_HOME` (mkShell flattens env into the derivation, so no `.env.` prefix)
+- [x] `flake.nix`: fix stale comment "Standard un-overridden package" (code actually does `pkgs.llama-cpp.override { cudaSupport = true; }`) — why: comment contradicts code, misleads future edits — verify: `! grep -q 'un-overridden' flake.nix && echo OK`
+- [x] `flake.nix` shellHook: replace "Run 'pi install -l npm:@baryonlabs/pi-agent-harness'" hint — why: harness is already installed at `.pi/npm/node_modules/@baryonlabs/pi-agent-harness` — verify: `! grep -q 'pi install' flake.nix && echo OK`
+- [x] Ensure `nix flake check` passes (final gate after the flake edits above) — why: no current evidence the flake passes checks; reproducibility baseline — verify: `nix flake check > /tmp/flake-check.log 2>&1; echo exit=$?; tail -5 /tmp/flake-check.log`
