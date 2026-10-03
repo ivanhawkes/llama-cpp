@@ -83,7 +83,9 @@ vram="$(nvidia-smi --query-gpu=index,name,memory.used,memory.free,utilization.gp
   '{ printf "idx%s %s: %s used / %s free (%s util)\n", $1, $2, $3, $4, $5 }')"
 [ -n "$vram" ] || vram="nvidia-smi unavailable"
 
-ts="$(date '+%Y-%m-%dT%H:%M:%S%z')"
+# UTC (Z) to match the run-server session marker and perf-log.md convention;
+# local time with %z offset would show a different calendar date for the same session.
+ts="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 block="$(cat <<EOF
 === ${ts} perf-watch ===
 requests: processing=${busy} deferred=${deferred}

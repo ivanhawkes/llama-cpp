@@ -184,3 +184,21 @@ happened, resolution/workaround.
   happened. Fixed by grouping the echo into the pipeline (`{ echo ...; llama-server ...; } | tee
   "$LOG"`); verified in the rebuilt script text + `bash -n` (e2e blocked: no second server instance
   while the main one runs).
+- 2026-10-03 — Wrote a perf-log.md entry for the live session (started 13:44Z). **Ambiguity:**
+  "write a log entry" had two unresolved points. (1) The log's convention is to append rows as
+  sessions *complete*, but the current session was still running — resolved by writing an
+  in-progress row marked "ongoing, as of 13:49Z", with totals computed from the per-request
+  `prompt eval time` / `eval time` lines in /tmp/llama-server.log (cross-checked against the
+  /metrics counters, which matched exactly for the first 6 requests). (2) The user stated they
+  had deleted the performance log prior to the previous prompt, but perf-log.md was still on
+  disk with its original content and `git status` clean — verified on disk rather than assuming,
+  and appended to the existing file instead of recreating it from scratch.
+- 2026-10-04 — User deleted perf-log.md; asked for a check that performance records keep
+  consistent time/date/timezone. **Ambiguity:** "consistent" could mean unambiguous values or a
+  uniform convention — resolved by checking both. Findings: all values were correct (session
+  marker `[2026-10-03T14:00:12Z]` matches the process start time exactly; perf-watch's
+  `+1000` stamp converted exactly to `date -u`; clock NTP-synced), but conventions were mixed —
+  `perf-watch` stamped local AEST (`%z`) while the session marker and perf-log.md use UTC `Z`,
+  so one session spans two calendar dates across logs. Fixed: `scripts/perf-watch` now uses
+  `date -u '+%Y-%m-%dT%H:%M:%SZ'`; regenerated `logs/perf-watch.log` (its first block was a test
+  run from this check) and verified the stamp equals `date -u`.
