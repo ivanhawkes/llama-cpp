@@ -31,7 +31,7 @@ This skill must never overflow the context window. Enforce:
    "
    ```
 
-   **GPU ordering/indexing:** fastfetch's GPU list order is arbitrary — never use `hardware.json` to decide CUDA indices. For any GPU order or index-mapping decision (e.g. `CUDA_VISIBLE_DEVICES` pinning), `nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader` is the single source of truth.
+   **GPU ordering/indexing:** fastfetch's GPU list order is arbitrary — never use `hardware.json` to decide CUDA indices. For any GPU order or index-mapping decision, `nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader` is the single source of truth. Never propose `CUDA_VISIBLE_DEVICES` pinning in this repo (standing rule — see AGENTS.md).
 
 2. **Read `flake.nix`** (small file — fine to read in full). This repo is a devShell + `run-server` flake for llama.cpp inference, *not* a NixOS system configuration. Only suggest `nixos-rebuild`/`nixos-test`-style changes if the flake actually exposes `nixosConfigurations`.
 
@@ -71,7 +71,7 @@ Rules:
 
 ## Improvement areas (for deriving tasks)
 
-1. **Project (flake / dev environment)** — GPU pinning (`CUDA_VISIBLE_DEVICES`) and VRAM vs model size, HF cache location (`HF_HOME`), driver libs on `LD_LIBRARY_PATH`, flake structure, reproducibility, `nix flake check`.
+1. **Project (flake / dev environment)** — VRAM vs model size (no `CUDA_VISIBLE_DEVICES` pinning — see AGENTS.md), HF cache location (`HF_HOME`), driver libs on `LD_LIBRARY_PATH`, flake structure, reproducibility, `nix flake check`.
 2. **LLM ability to write code** — clearer module boundaries, typed/validated Nix expressions, consistent naming conventions, examples that make generated code easier to verify.
 3. **LLM ability to debug** — better error messages, reproducible failure steps (e.g. how to reproduce a `run-server` startup failure), documented known pitfalls.
 4. **LLM ability to test** — smoke tests for the actual entry points (e.g. start `llama-server`, curl `/health`), unit tests for Nix modules, a documented way to run them.
@@ -89,6 +89,9 @@ Keep it concrete and short. No generic NixOS advice that doesn't apply to this r
 
 ## Guardrails
 
+- Never propose or add `CUDA_VISIBLE_DEVICES` pinning in this repo (standing rule — see
+  AGENTS.md). The preflight guard in `run-server` (index 0 must be the RTX 5060 Ti) is the
+  only GPU-ordering contract; treat any reference claiming a pin exists as a bug to remove.
 - Don't hand-edit `hardware.json`; regenerate it with fastfetch instead.
 - Prefer user-level changes in the flake/devShell over system-level (root) changes.
 - Verify a nixpkgs package exists before suggesting it: `nix eval nixpkgs#<attr> --raw 2>&1 | head -5` (flake syntax; note some packages live under sub-sets, e.g. `nixpkgs#linuxPackages.nvidia_x11.open`).

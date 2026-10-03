@@ -22,9 +22,10 @@
       runServer = pkgs.writeShellScriptBin "run-server" ''
         echo "🤖 Launching local GPU inference engine (Coding Optimization)..."
 
-        # Preflight: verify physical GPU index 0 is actually the RTX 5060 Ti before
-        # pinning it. The model (~15GB) does not fit on the RTX 4060 (8GB), and a
-        # stale positional pin would otherwise fail obscurely at model-load time.
+        # Preflight: verify physical GPU index 0 is actually the RTX 5060 Ti.
+        # llama.cpp loads onto device 0 first, and the model (~15GB) does not fit on
+        # the RTX 4060 (8GB), so a stale index mapping would fail obscurely at
+        # model-load time. (No CUDA_VISIBLE_DEVICES pin — see AGENTS.md.)
         if command -v nvidia-smi > /dev/null 2>&1; then
           GPU0=$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader -i 0 | head -1)
           case "$GPU0" in

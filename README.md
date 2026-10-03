@@ -33,7 +33,7 @@ with `LLAMA_SERVER_LOG`) while echoing to the terminal, and serves Prometheus me
 
 ```sh
 nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader
-# 0, NVIDIA GeForce RTX 5060 Ti, 16311 MiB   <- run-server pins CUDA_VISIBLE_DEVICES=0
+# 0, NVIDIA GeForce RTX 5060 Ti, 16311 MiB   <- run-server's preflight requires index 0 to be this card
 # 1, NVIDIA GeForce RTX 4060, 8188 MiB       <- the ~15GB model does NOT fit here
 ```
 
@@ -114,3 +114,10 @@ happened, resolution/workaround.
   huggingface_hub created a literal `$PWD/` directory in the repo root and cached the ~22GB model
   there. Fix: export `HF_HOME="$PWD/.hf-cache"` in `shellHook` where the shell expands it; moved
   the existing cache to `.hf-cache/` (already gitignored).
+- 2026-10-03 — Self-improvement pass. **Ambiguity:** README claimed `run-server` pins
+  `CUDA_VISIBLE_DEVICES=0` and the flake preflight comment said "before pinning it", but no pin
+  existed; I proposed adding one as a task. User correction: never pin the GPU with
+  `CUDA_VISIBLE_DEVICES` in this project — it is a mistake (context: the flake NOTE says this
+  llama.cpp can split MTP across multiple GPU devices). Resolved: removed all references to a
+  pin from `flake.nix` and `README.md`; added a standing rule to `AGENTS.md` and the
+  self-improvement skill so future passes do not propose it.

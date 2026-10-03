@@ -1,5 +1,12 @@
 # Project instructions for agents
 
+## GPU pinning
+
+Do **not** pin the GPU with `CUDA_VISIBLE_DEVICES` in this project (user instruction,
+2026-10-03 — it is a mistake here). The preflight guard in `run-server` (CUDA index 0 must
+be the RTX 5060 Ti) is the only GPU-ordering contract. Do not propose adding a pin as an
+"improvement", and remove any reference that claims one exists.
+
 ## Documentation requirements
 
 While working in this repo, you must record the following in `README.md`, under the

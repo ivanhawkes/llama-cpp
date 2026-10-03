@@ -1,10 +1,17 @@
-# Self-improvement tasks — llama-cpp flake (2026-10-03)
+# Self-improvement tasks (2026-10-03 pass)
 
-Facts: GPU 0=RTX 5060 Ti 16GB / 1=RTX 4060 8GB (nvidia-smi, open driver 615.71.09); CPU x86_64-v3 24T; RAM ~67GB; disk free ~804GB; hardware.json fresh (today); git root /home/ivan/flakes (monorepo), clean tree.
+Fact sheet: GPU idx0 = RTX 5060 Ti 16GB, idx1 = RTX 4060 8GB (nvidia-smi); CPU x86_64-v3 24c;
+RAM ~67GB; disk ~804GB free; hardware.json fresh (Oct 3); server currently UP on :8080
+(serves this agent's own inference — cannot be restarted); .hf-cache = 13G.
 
-- [x] Add `README.md` (repo layout, run-server/smoke-test usage, GPU index facts, hardware.json field definitions) — why: no README exists; LLMs debugging this repo have no entry point — verify: `test -f README.md && grep -q 'smoke-test' README.md && echo OK`
-- [x] `flake.nix` run-server: preflight guard that fails fast with a clear message if nvidia-smi index 0 is not the RTX 5060 Ti — why: `CUDA_VISIBLE_DEVICES=0` is positional; nvidia-smi shows 0=5060 Ti today but order can change, and picking the 8GB card would fail obscurely with a ~15GB model — verify: `GPU0=$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader -i 0 | head -1); case "$GPU0" in *"5060 Ti"*) echo PASS;; *) echo FAIL "$GPU0";; esac`
-- [x] `flake.nix` devShell: pin `HF_HOME = "$PWD/.hf-cache"` (+ one-line `.gitignore` entry) — why: run-server pulls a ~15GB HF model on first start; without HF_HOME the cache location is implicit per user/machine — verify: `nix eval --raw .#devShells.x86_64-linux.default.HF_HOME` (mkShell flattens env into the derivation, so no `.env.` prefix)
-- [x] `flake.nix`: fix stale comment "Standard un-overridden package" (code actually does `pkgs.llama-cpp.override { cudaSupport = true; }`) — why: comment contradicts code, misleads future edits — verify: `! grep -q 'un-overridden' flake.nix && echo OK`
-- [x] `flake.nix` shellHook: replace "Run 'pi install -l npm:@baryonlabs/pi-agent-harness'" hint — why: harness is already installed at `.pi/npm/node_modules/@baryonlabs/pi-agent-harness` — verify: `! grep -q 'pi install' flake.nix && echo OK`
-- [x] Ensure `nix flake check` passes (final gate after the flake edits above) — why: no current evidence the flake passes checks; reproducibility baseline — verify: `nix flake check > /tmp/flake-check.log 2>&1; echo exit=$?; tail -5 /tmp/flake-check.log`
+- [ ] smoke-test: pass `--port "$PORT"` to `run-server` (flake.nix) — why: `SMOKE_TEST_PORT` only changes the polled URL; run-server always binds 8080, so setting SMOKE_TEST_PORT makes the test poll a port nothing listens on — verify: grep rebuilt script for `--port "$PORT"` (full e2e blocked while main server holds ~15GB of the 16GB VRAM)
+- [ ] `nix flake check` passes — why: baseline reproducibility; no recent run recorded — verify: `nix flake check > /tmp/flake-check.log 2>&1; tail -30 /tmp/flake-check.log`
+- [ ] README: add short "Reproducing a startup failure" section (which logs to read, port/VRAM contention with the live server) — why: agent notes record real debugging pain (501 on /metrics, live server unobservable/unrestartable) — verify: `grep -n "Reproducing" README.md`
+- [ ] Preflight free-VRAM check in run-server (nvidia-smi memory.free on index 0, fail early with clear message) — why: ~15GB model on 16GB card; a second instance OOMs obscurely at load time while the main server runs — verify: run `run-server` while main server holds VRAM → expect fast, clear error (no model load)
+- [ ] README: clarify perf-log.md rows are appended manually (no automation references it) — why: `grep -rn perf-log flake.nix .pi/skills` finds nothing — verify: `grep -n "manually" README.md`
+
+## Removed
+
+- 2026-10-03: "Add `export CUDA_VISIBLE_DEVICES=0` to run-server" — user instruction: never pin
+  the GPU with `CUDA_VISIBLE_DEVICES` in this project (standing rule now in AGENTS.md).
+  All references removed from flake.nix and README.md.
