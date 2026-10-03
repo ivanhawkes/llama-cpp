@@ -6,3 +6,6 @@ result
 
 # Hugging Face model cache (pinned via HF_HOME in the devShell)
 .hf-cache/
+
+# perf-watch raw monitoring output (appended on every run)
+logs/

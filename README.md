@@ -202,3 +202,19 @@ happened, resolution/workaround.
   cache hits per decode step). Workaround: use the log timing lines for per-request numbers and
   the `*_tokens_seconds` gauges for throughput; treat the cached counter as unreliable until
   verified.
+- 2026-10-03 — Took over the perf-watch task from `/tmp/handoff-llama-cpp-perf-watch.md`.
+  **Ambiguity:** the handoff states `scripts/perf-watch` and `logs/perf-watch.log` exist, but
+  neither is on disk, was never committed (no git history), and the tree is clean — the only
+  "perf-watch" reference anywhere is the handoff itself. It also claims "last run at 17:59",
+  which postdates both the handoff's own mtime (15:45 AEST) and the current time, so it cannot
+  be reconciled with this machine's clock. **Tool deviation:** this build (llama-cpp 0.5.0)
+  exposes no TTFT metric in `/metrics` — only the `llamacpp:*` family — so TTFT can only be
+  derived from the log's `prompt eval time` lines. Resolution: report live metrics directly
+  (read-only: `/metrics`, log timing lines, `nvidia-smi`); did not recreate the script without
+  user confirmation.
+- 2026-10-03 — Recreated `scripts/perf-watch` after user confirmation (follow-up to the
+  handoff-takeover entry above). **Ambiguity:** the instruction said "perf-log.md was never
+  created", but it exists on disk and is git-tracked; the user confirmed they were wrong — the
+  missing files were `scripts/perf-watch` and `logs/perf-watch.log`. Resolution: recreated the
+  script (TTFT derived from log prefill lines, since `/metrics` has no TTFT metric in this
+  build); added `logs/` to `.gitignore` since the watch log is appended on every run.
