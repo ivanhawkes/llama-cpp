@@ -139,3 +139,27 @@ happened, resolution/workaround.
   embedded `\r` characters that matched and replaced CR-free regions, written back without
   CRs (verified `grep -c $'\r'` → 0 after each edit) — same behaviour as the earlier entries;
   workaround unchanged (verify contents after every edit).
+- 2026-10-03 — Researched proper invocation of the local `context7` skill. **Ambiguity:** "the
+  /context7 skill" conflates two things — pi's local skill (forced via `/skill:context7 <request>`,
+  per `docs/skills.md`; args are appended to the loaded instructions) and Context7's own prompt
+  conventions (`use context7`, `use library /org/project`). Resolved by reading both pi's skills
+  doc and Context7's official docs (context7.com/docs + upstash/context7 README): local skill is
+  auto-routed by description or forced with `/skill:context7`; the `use …` phrases are prompt-level
+  triggers for MCP clients. **Tool deviations:** `docs.context7.com` does not resolve (DNS failure);
+  docs live at `context7.com/docs` (append `.md` for markdown, index at `/docs/llms.txt`, search at
+  `/docs/search?q=`). GitHub raw fetch of the README on branch `main` 404s — the repo's default
+  branch is `master`. Workaround: use those URLs/branch directly.
+- 2026-10-03 — Replaced the hand-rolled Context7 bridge with the official
+  `@upstash/context7-pi` extension (`pi install -l npm:@upstash/context7-pi`); retired
+  `.pi/skills/context7/` (SKILL.md + `scripts/call.mjs`) and removed the now-unneeded
+  `@upstash/context7-mcp` dependency from `.pi/npm`. **Ambiguity:** "retire scripts/call.mjs"
+  could mean deleting only the script; resolved as retiring the whole local skill, since its
+  SKILL.md existed solely to drive call.mjs and the official extension ships its own
+  `context7-docs` skill (keeping both would double-route library questions). **Tool
+  deviation:** `pi install -l` re-resolved `.pi/npm` against package.json and pruned 235
+  packages on its own (expected: only the new package added) — harmless, tree verified by
+  listing node_modules; a follow-up manual `npm prune` printed an "install-scripts" approval
+  warning for protobufjs postinstall (newer-npm behaviour), also benign. Verified end-to-end in
+  a fresh `pi -p` session: resolve-library-id → `/ggml-org/llama.cpp`, query-docs →
+  `--ctx-size`. Note: the official tools return API output untruncated (the old bridge capped
+  at 12000 chars for the 48k window) — keep queries to one narrow topic.

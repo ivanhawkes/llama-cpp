@@ -1,5 +1,6 @@
 {
   "packages": [
-    "npm:@baryonlabs/pi-agent-harness"
+    "npm:@baryonlabs/pi-agent-harness",
+    "npm:@upstash/context7-pi"
   ]
 }
