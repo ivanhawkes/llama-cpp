@@ -255,3 +255,13 @@ happened, resolution/workaround.
   embedded `\r` characters that matched and replaced CR-free regions, written back without
   CRs (verified `grep -c $'\r'` → 0 after each edit) — same behaviour as the earlier entries;
   workaround unchanged (verify contents after every edit).
+- 2026-10-03 — Fixed a YAML error in `.pi/skills/context7/SKILL.md` reported by pi on load:
+  `Nested mappings are not allowed in compact mappings at line 2, column 14`.
+  **Tool deviation:** pi parses skill frontmatter with eemeli `yaml.parse`, which rejects an
+  unquoted plain scalar containing a colon+space sequence — the description contained
+  `…you already know the answer: training data may not reflect recent changes.`, and the
+  parser tried to read `answer:` as a nested block-mapping key. Expected (from general YAML
+  habit): long single-line values parse fine unquoted. Actual: any `: ` inside an unquoted
+  scalar breaks frontmatter parsing. Workaround: wrapped the whole `description` value in
+  double quotes (verified with the same `yaml.parse` call pi uses); quoting also guards
+  against future edits reintroducing colons.

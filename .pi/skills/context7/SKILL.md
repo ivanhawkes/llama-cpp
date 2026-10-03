@@ -1,6 +1,6 @@
 ---
 name: context7
-description: Fetch current documentation for any library, framework, SDK, API, CLI tool, or cloud service via Context7 (MCP over stdio). Use whenever the user asks how to use a third-party package/library/framework — API syntax, options, configuration, version migration, setup instructions, examples, or library-specific debugging — even well-known ones (React, Next.js, Prisma, Express, Tailwind, Django, Spring Boot) and even when you think you already know the answer: training data may not reflect recent changes. Prefer this over web search for library docs. Do NOT use for refactoring, writing scripts from scratch, debugging business logic, code review, general programming concepts, or questions about this repo's own code.
+description: "Fetch current documentation for any library, framework, SDK, API, CLI tool, or cloud service via Context7 (MCP over stdio). Use whenever the user asks how to use a third-party package/library/framework — API syntax, options, configuration, version migration, setup instructions, examples, or library-specific debugging — even well-known ones (React, Next.js, Prisma, Express, Tailwind, Django, Spring Boot) and even when you think you already know the answer: training data may not reflect recent changes. Prefer this over web search for library docs. Do NOT use for refactoring, writing scripts from scratch, debugging business logic, code review, general programming concepts, or questions about this repo's own code."
 ---
 
 # Context7 — current library docs via MCP
