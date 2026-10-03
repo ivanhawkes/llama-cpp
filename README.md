@@ -193,3 +193,12 @@ happened, resolution/workaround.
   client-specified setting 'system'"), and `--no-update-lock-file` does not help either.
   Workaround: reverted to the explicit `system = "x86_64-linux"`; `nix flake check` passes
   again. The portability task is blocked in this environment, not just deferred.
+- 2026-10-03 — Today's performance summary (inspected `/metrics`, `/tmp/llama-server.log`,
+  `nvidia-smi`). **Tool deviation:** `GET /metrics` reports
+  `llamacpp:prompt_tokens_cached_total` = 69,849 — larger than
+  `llamacpp:prompt_tokens_total` = 31,220 (which excludes cached tokens) and inconsistent with
+  the log's per-request `prompt eval time` lines (32,153 prompt tokens across 7 requests).
+  Expected: cached ≤ total prompt tokens. Actual: counter semantics unclear (possibly counts
+  cache hits per decode step). Workaround: use the log timing lines for per-request numbers and
+  the `*_tokens_seconds` gauges for throughput; treat the cached counter as unreliable until
+  verified.
