@@ -45,10 +45,19 @@ From the fact sheet + flake, derive at most ~8 candidate improvements (see areas
 - justified by a specific fact (a hardware field or a check result),
 - verifiable with one bounded command.
 
-Write them to `.pi/self-improvement/tasks.md` as a checklist, highest priority first:
+Write them to `.pi/self-improvement/tasks.md` as a checklist, ordered by priority (highest first):
+
+**Ordering rules:**
+
+1. **Importance.** Rank by how much the task matters: correctness/safety fixes and broken
+   entry points > missing verification (a check that has never run) > documentation gaps >
+   nice-to-haves.
+2. **Dependencies before dependents.** If task B cannot be completed or verified until task A
+   is done, B must be listed *below* A (A has higher priority) and marked `— depends on: <A>`.
+   A dependency cycle means the two tasks should be merged into one.
 
 ```markdown
-- [ ] <what> — why: <fact> — verify: `<bounded command>`
+- [ ] <what> — why: <fact> — verify: `<bounded command>` — depends on: <task, if any>
 ```
 
 Reply with only the fact sheet (a few lines) + the task list. Then continue into Phase 3.
@@ -66,6 +75,8 @@ For each pending task, top to bottom:
 Rules:
 
 - Never batch multiple tasks in one pass.
+- If executing a task reveals that a later task was actually its prerequisite, reorder the
+  remaining tasks in `tasks.md` (prerequisite first) before continuing.
 - If a command's output exceeds ~30 lines, save it to a file and read only the relevant part.
 - Stop after 3 tasks or when the user says so; remaining tasks stay in `tasks.md` for the next session.
 
@@ -84,6 +95,8 @@ Each task in `tasks.md` has:
 - **What** — the change, with file path (and line if relevant)
 - **Why** — the fact justifying it (cite a hardware field or a check result)
 - **How to verify** — one bounded command that proves it works
+- **Depends on** (optional) — the task that must be completed first; such a task always sits
+  below its dependency in the list
 
 Keep it concrete and short. No generic NixOS advice that doesn't apply to this repo.
 

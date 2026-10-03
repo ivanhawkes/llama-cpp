@@ -171,3 +171,12 @@ happened, resolution/workaround.
   printed exit 0 despite zero matches — the pipeline's status is `head`'s, not `grep`'s. The
   check was still valid via empty output, but a match/no-match test should use `grep -q`
   or capture grep's status before piping.
+- 2026-10-03 — Added task-ordering rules to the self-improvement skill (Phase 2 ordering rules,
+  Phase 3 mid-pass reorder, optional `depends on` field in the quality bar). **Ambiguity:**
+  "priority of importance" had no defined scale — resolved as a fixed ranking: correctness/safety
+  fixes and broken entry points > missing verification > documentation gaps > nice-to-haves;
+  dependency rule: a task that needs another completed first must sit *below* it (a cycle means
+  merge the two tasks). **Tool deviation:** the user's `git push` after this session's commits
+  reported "Everything up-to-date" instead of pushing them — verified `main == origin/main`
+  and empty `git log origin/main..HEAD`, so no commits were lost; the remote had already been
+  synced by something else (mechanism unknown).
