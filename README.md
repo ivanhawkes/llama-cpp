@@ -218,3 +218,12 @@ happened, resolution/workaround.
   missing files were `scripts/perf-watch` and `logs/perf-watch.log`. Resolution: recreated the
   script (TTFT derived from log prefill lines, since `/metrics` has no TTFT metric in this
   build); added `logs/` to `.gitignore` since the watch log is appended on every run.
+- 2026-10-03 — Summarised "performance metrics for the last hour" (15:17–16:17 AEST).
+  **Ambiguity:** that window spans two server sessions — the previous session ended at
+  15:54 and its per-request log was truncated on restart, so no per-request data survives
+  for the first ~37 min of the window. Resolution: reported the current session's full
+  per-request stats (it started 15:54, so all of it is inside the last hour) plus the
+  previous session's whole-session rollup from `perf-log.md` as a proxy for the earlier
+  segment. Secondary observation: `perf-log.md` labels the previous session end "15:54Z"
+  (UTC), but that would be in the future relative to the machine clock (AEST, UTC+10);
+  it is evidently local time with a mislabeled suffix.
