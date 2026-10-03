@@ -14,6 +14,21 @@ These are kept so the user can watch for degradations or improvements in the age
 performance. When asked about performance metrics, read these files rather than looking
 for agent-side instrumentation.
 
+## Execution hardware
+
+The LLM that this pi harness talks to runs on the machine documented in `hardware.json`
+(fastfetch JSON output). That file is the authoritative specification of the hardware this
+agent executes on — read it when you need exact specs. Summary as of 2026-10-03:
+
+- **OS:** NixOS 26.11 (Zokor), Linux 6.18.54, x86_64
+- **CPU:** AMD Ryzen 9 3900X — 12 cores / 24 threads, base 4.1 GHz / max 4.7 GHz
+- **GPU:** NVIDIA GeForce RTX 5060 Ti (the inference GPU; CUDA index 0 per the preflight
+  guard in `run-server`) plus a second NVIDIA GeForce RTX 4060
+- **RAM:** ~67 GB total
+- **Disk:** ext4 root on NVMe (~982 GB)
+
+If `hardware.json` disagrees with this summary, trust the file.
+
 ## GPU pinning
 
 Do **not** pin the GPU with `CUDA_VISIBLE_DEVICES` in this project (user instruction,

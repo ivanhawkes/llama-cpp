@@ -202,3 +202,11 @@ happened, resolution/workaround.
   so one session spans two calendar dates across logs. Fixed: `scripts/perf-watch` now uses
   `date -u '+%Y-%m-%dT%H:%M:%SZ'`; regenerated `logs/perf-watch.log` (its first block was a test
   run from this check) and verified the stamp equals `date -u`.
+- 2026-10-04 — Added an "Execution hardware" section to AGENTS.md pointing at `hardware.json`
+  as the authoritative spec of the machine hosting the LLM. **Ambiguity:** the request said
+  "the LLM this pi harness is talking to is documented in hardware.json", but `hardware.json`
+  is fastfetch output documenting the *machine* (OS/CPU/GPU/RAM/disk) — it contains no model
+  name or LLM spec. Resolved as "the hardware specification on which the LLM executes is
+  documented in hardware.json"; the AGENTS.md note names the file as authoritative and carries
+  a dated summary of key specs (NixOS 26.11, Ryzen 9 3900X, RTX 5060 Ti + RTX 4060, ~67 GB RAM)
+  with the file winning any disagreement.
