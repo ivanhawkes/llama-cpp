@@ -19,4 +19,4 @@ support. Full context for a fresh session: `/tmp/handoff-llama-cpp-context7-mcp.
       confirm output is usable and trimmed
 - [x] Validate per harness Phase 6 (frontmatter/trigger checks); record any issues in README
       Agent notes
-- [ ] Commit & push via `/skill:cp`
+- [x] Commit & push via `/skill:cp`
