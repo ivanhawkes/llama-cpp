@@ -151,3 +151,10 @@ happened, resolution/workaround.
   extract the real script path from the env file (`grep -o '/nix/store/[a-z0-9]*-run-server'
   result`) or use `nix shell . --command run-server`; verify behaviour by running that store
   path directly.
+- 2026-10-03 — Fixed smoke-test to kill the wrapper's direct children (`pkill -P $PID`) before
+  the wrapper, so a failed/finished test no longer orphans `llama-server` + `tee`. **Constraint:**
+  e2e verification of the orphan-kill path is blocked while the main server runs — it serves
+  this agent's own inference and holds ~11GB of idx0 VRAM; user instruction (2026-10-03): never
+  start a second model instance on this machine, infer performance from the existing logs
+  (`/tmp/llama-server.log`, `/metrics`, `perf-log.md`) instead. Verified by inspecting the
+  rebuilt script only.

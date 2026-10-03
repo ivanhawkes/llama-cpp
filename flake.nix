@@ -93,7 +93,16 @@
         # port and the polled URL (run-server forwards "$@" to llama-server).
         run-server --port "$PORT" > "$LOG" 2>&1 &
         PID=$!
-        trap 'kill $PID 2>/dev/null' EXIT
+
+        # Kill the wrapper's direct children (llama-server + tee) before the
+        # wrapper itself, so no orphaned llama-server keeps holding VRAM.
+        # Scoped to $PID's children only — never a blanket pkill -f, which could
+        # hit an unrelated server. (Killing $PID alone orphans the pipeline.)
+        cleanup() {
+          pkill -P $PID 2>/dev/null
+          kill $PID 2>/dev/null
+        }
+        trap 'cleanup' EXIT
 
         echo "Waiting up to $TIMEOUT seconds for http://127.0.0.1:$PORT/health ..."
         for i in $(seq 1 "$TIMEOUT"); do
