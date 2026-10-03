@@ -244,3 +244,14 @@ happened, resolution/workaround.
   segment. Secondary observation: `perf-log.md` labels the previous session end "15:54Z"
   (UTC), but that would be in the future relative to the machine clock (AEST, UTC+10);
   it is evidently local time with a mislabeled suffix.
+- 2026-10-03 — Implemented the Context7 skill (`.pi/skills/context7/` + `scripts/call.mjs`,
+  TODO.md Option A). **Tool deviation:** npm 11.19.1 (Nix store) did not run lifecycle scripts
+  during `npm install @upstash/context7-mcp` — it printed `npm warn install-scripts` for
+  esbuild/protobufjs/etc. and pointed at `npm install-scripts approve`. Expected: postinstall
+  scripts run automatically. Actual: they are gated by default in this npm build.
+  Workaround: none needed — verified the package works without them (live stdio probe plus
+  full end-to-end test through `call.mjs`: resolve + query + error paths all pass).
+- 2026-10-03 — Same task. **Tool deviation (recurring):** `edit` payloads again carried
+  embedded `\r` characters that matched and replaced CR-free regions, written back without
+  CRs (verified `grep -c $'\r'` → 0 after each edit) — same behaviour as the earlier entries;
+  workaround unchanged (verify contents after every edit).
