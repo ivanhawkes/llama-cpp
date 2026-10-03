@@ -96,58 +96,12 @@ happened, resolution/workaround.
 
 <!-- agent notes appended below -->
 
-- 2026-10-03 — Created the `cp` commit/push skill (`.pi/skills/cp/SKILL.md`). **Ambiguity:** the
-  request asked for a skill "called `/cp`", but pi registers skills as `/skill:<name>` commands
-  (confirmed in source: `_expandSkillCommand` only expands the `/skill:` prefix; the
-  `enableSkillCommands` setting describes them as `/skill:name`). Resolved by naming the skill
-  `cp`, so it is invoked as `/skill:cp`; an exact `/cp` would require an extension command instead.
-- 2026-10-03 — Same task. **Ambiguity:** "unexpected staged or filesystem changes" had no defined
-  baseline for what is expected. Resolved by defining the expected set as files created/modified
-  during the current session (or explicitly requested by the user); anything else git reports
-  (staged, unstaged, untracked) is treated as unexpected and triggers the warn-and-halt gate.
 - 2026-10-03 — Self-improvement pass (flake.nix comment + shellHook hint fixes). **Tool deviation:**
   `edit` calls whose `oldText`/`newText` contained embedded `\r` (carriage return) characters still
   matched and replaced regions of files containing no CRs at all. Expected: exact-text match should
   have failed. Actual: CRs appear to be normalized/ignored during matching, and the replacement was
   written without CRs (verified with `grep -c $'\r'` → 0 after each edit). Workaround: avoid embedding
   control characters in edit payloads; verify file contents after every edit.
-- 2026-10-03 — Made `run-server` output viewable (tee to `/tmp/llama-server.log`) + added `--metrics`;
-  created git-tracked `perf-log.md`. **Ambiguity:** "session" was undefined — resolved as one
-  `run-server` invocation; the log is truncated per start so it always holds exactly one session.
-  **Ambiguity:** the already-running server's stdout went to a terminal (`/dev/pts/0`) and could not
-  be read, and it could not be restarted because it serves this agent's own inference
-  (`PI_PROVIDER=llama-cpp`). Resolved: tee + `--metrics` apply to future sessions; the live session
-  can only be observed non-invasively (e.g. `strace -p <pid> -e write`) if needed.
-  **Shell issue:** `exec cmd | tee` is invalid in POSIX sh, so `exec` was dropped; the wrapper shell
-  now parents a pipeline, meaning killing the run-server PID does not kill llama-server (kill the
-  process group or `pkill -f llama-server`) and the script's exit status is tee's (0) even if the
-  server crashes — smoke-test is unaffected since it polls process liveness.
-  **Tool deviation:** `GET /metrics` on a running server returns 501 "Start it with `--metrics`" —
-  the endpoint only exists when the flag is passed.
-- 2026-10-03 — Verified the tee/`--metrics` changes were already committed and rebuilt. **Nix quirk:**
-  the pre-change `run-server` store path (`i8h0jk…`) still exists and lacks `tee`; a terminal opened
-  before the flake rebuild has the old script on its PATH, so restarting from it would silently skip
-  logging/metrics. New shells (direnv/`nix develop`, `result` wrapper) resolve the new script
-  (`grb6g6…`). Workaround: restart the server from a fresh shell; confirm `/tmp/llama-server.log`
-  appears.
-- 2026-10-03 — Fixed `HF_HOME` in the devShell. **Nix/shell issue:** `HF_HOME = "$PWD/.hf-cache"`
-  in the flake's `env` is a literal string (Nix only interpolates `${...}`, never `$VAR`), so
-  huggingface_hub created a literal `$PWD/` directory in the repo root and cached the ~22GB model
-  there. Fix: export `HF_HOME="$PWD/.hf-cache"` in `shellHook` where the shell expands it; moved
-  the existing cache to `.hf-cache/` (already gitignored).
-- 2026-10-03 — Self-improvement pass. **Ambiguity:** README claimed `run-server` pins
-  `CUDA_VISIBLE_DEVICES=0` and the flake preflight comment said "before pinning it", but no pin
-  existed; I proposed adding one as a task. User correction: never pin the GPU with
-  `CUDA_VISIBLE_DEVICES` in this project — it is a mistake (context: the flake NOTE says this
-  llama.cpp can split MTP across multiple GPU devices). Resolved: removed all references to a
-  pin from `flake.nix` and `README.md`; added a standing rule to `AGENTS.md` and the
-  self-improvement skill so future passes do not propose it.
-- 2026-10-03 — Self-improvement pass (smoke-test port fix). **Constraint:** full
-  end-to-end verification of `SMOKE_TEST_PORT` is blocked while the main server runs —
-  it holds ~15GB of the 16GB VRAM, so a second `llama-server` would OOM at load, and the
-  live server serves this agent's own inference (cannot simply be stopped). Verified by
-  inspecting the rebuilt script instead (`run-server --port "$PORT"` present). An e2e run
-  needs a window with no other server occupying VRAM: `SMOKE_TEST_PORT=8123 smoke-test`.
 - 2026-10-03 — Added a free-VRAM preflight to `run-server` (fail fast if < 12000 MiB free on
   index 0). **Tool deviation:** after `nix build .#devShells.x86_64-linux.default`, the `result`
   symlink points at an *internal mkShell env file* (`…-nix-shell`, a ~13KB text file of
@@ -171,18 +125,6 @@ happened, resolution/workaround.
   printed exit 0 despite zero matches — the pipeline's status is `head`'s, not `grep`'s. The
   check was still valid via empty output, but a match/no-match test should use `grep -q`
   or capture grep's status before piping.
-- 2026-10-03 — Added task-ordering rules to the self-improvement skill (Phase 2 ordering rules,
-  Phase 3 mid-pass reorder, optional `depends on` field in the quality bar). **Ambiguity:**
-  "priority of importance" had no defined scale — resolved as a fixed ranking: correctness/safety
-  fixes and broken entry points > missing verification > documentation gaps > nice-to-haves;
-  dependency rule: a task that needs another completed first must sit *below* it (a cycle means
-  merge the two tasks). **Tool deviation:** the user's `git push` after this session's commits
-  reported "Everything up-to-date" instead of pushing them — verified `main == origin/main`
-  and empty `git log origin/main..HEAD`, so no commits were lost; the remote had already been
-  synced by something else (mechanism unknown).
-- 2026-10-03 — Self-improvement pass 4. **Baseline `nix flake check`: passed** (exit 0,
-  "all checks passed!"; only warning was the expected dirty-tree notice from in-flight
-  `tasks.md` edits). First recorded run of this check; no deviations observed.
 - 2026-10-03 — Same pass. **Tool deviation:** switching the flake to the standard
   `finalSystem` pattern broke both `nix eval .#devShells.x86_64-linux.default.name --raw`
   and `nix flake check` with "error: cannot find flake 'flake:finalSystem' in the flake
@@ -193,75 +135,7 @@ happened, resolution/workaround.
   client-specified setting 'system'"), and `--no-update-lock-file` does not help either.
   Workaround: reverted to the explicit `system = "x86_64-linux"`; `nix flake check` passes
   again. The portability task is blocked in this environment, not just deferred.
-- 2026-10-03 — Today's performance summary (inspected `/metrics`, `/tmp/llama-server.log`,
-  `nvidia-smi`). **Tool deviation:** `GET /metrics` reports
-  `llamacpp:prompt_tokens_cached_total` = 69,849 — larger than
-  `llamacpp:prompt_tokens_total` = 31,220 (which excludes cached tokens) and inconsistent with
-  the log's per-request `prompt eval time` lines (32,153 prompt tokens across 7 requests).
-  Expected: cached ≤ total prompt tokens. Actual: counter semantics unclear (possibly counts
-  cache hits per decode step). Workaround: use the log timing lines for per-request numbers and
-  the `*_tokens_seconds` gauges for throughput; treat the cached counter as unreliable until
-  verified.
-- 2026-10-03 — Took over the perf-watch task from `/tmp/handoff-llama-cpp-perf-watch.md`.
-  **Ambiguity:** the handoff states `scripts/perf-watch` and `logs/perf-watch.log` exist, but
-  neither is on disk, was never committed (no git history), and the tree is clean — the only
-  "perf-watch" reference anywhere is the handoff itself. It also claims "last run at 17:59",
-  which postdates both the handoff's own mtime (15:45 AEST) and the current time, so it cannot
-  be reconciled with this machine's clock. **Tool deviation:** this build (llama-cpp 0.5.0)
-  exposes no TTFT metric in `/metrics` — only the `llamacpp:*` family — so TTFT can only be
-  derived from the log's `prompt eval time` lines. Resolution: report live metrics directly
-  (read-only: `/metrics`, log timing lines, `nvidia-smi`); did not recreate the script without
-  user confirmation.
-- 2026-10-03 — Recreated `scripts/perf-watch` after user confirmation (follow-up to the
-  handoff-takeover entry above). **Ambiguity:** the instruction said "perf-log.md was never
-  created", but it exists on disk and is git-tracked; the user confirmed they were wrong — the
-  missing files were `scripts/perf-watch` and `logs/perf-watch.log`. Resolution: recreated the
-  script (TTFT derived from log prefill lines, since `/metrics` has no TTFT metric in this
-  build); added `logs/` to `.gitignore` since the watch log is appended on every run.
-- 2026-10-03 — Created a TODO task for the Context7 install (Option A) and wrote a handoff
-  doc (`/tmp/handoff-llama-cpp-context7-mcp.md`). **Ambiguity:** "create a TODO task" had no
-  defined home — `.pi/self-improvement/tasks.md` is scoped to self-improvement passes, and the
-  `to-spec`/`to-tickets` skills expect an external tracker that is not configured in this repo.
-  Resolved by creating `TODO.md` at the repo root as the general task list. **Verification:**
-  live-probed `@upstash/context7-mcp` v4.1.1 over stdio in this env — it works, and its docs
-  tool is named `query-docs` (not `get-library-docs` as first assumed); exact tool schemas are
-  recorded in the handoff doc.
-- 2026-10-03 — Advised on installing the Context7 MCP server into the pi harness.
-  **Ambiguity:** "install an MCP server into pi" has no literal meaning here — pi 0.87.1
-  ships no MCP support at all (verified: zero `mcp` references in the pi monorepo source and
-  docs; the bundled harness README states pi deliberately has no MCP and everything is built
-  from skills/prompt templates/extensions/packages). Resolved by offering two bridge designs:
-  (a) a `.pi/skills/context7/` skill with a bundled stdio JSON-RPC script (recommended,
-  harness-idiomatic, zero pi code), or (b) a pi extension that spawns the server on
-  `session_start` and registers its tools natively via `pi.registerTool()`. No install was
-  performed; advice only.
-- 2026-10-03 — Summarised "performance metrics for the last hour" (15:17–16:17 AEST).
-  **Ambiguity:** that window spans two server sessions — the previous session ended at
-  15:54 and its per-request log was truncated on restart, so no per-request data survives
-  for the first ~37 min of the window. Resolution: reported the current session's full
-  per-request stats (it started 15:54, so all of it is inside the last hour) plus the
-  previous session's whole-session rollup from `perf-log.md` as a proxy for the earlier
-  segment. Secondary observation: `perf-log.md` labels the previous session end "15:54Z"
-  (UTC), but that would be in the future relative to the machine clock (AEST, UTC+10);
-  it is evidently local time with a mislabeled suffix.
-- 2026-10-03 — Implemented the Context7 skill (`.pi/skills/context7/` + `scripts/call.mjs`,
-  TODO.md Option A). **Tool deviation:** npm 11.19.1 (Nix store) did not run lifecycle scripts
-  during `npm install @upstash/context7-mcp` — it printed `npm warn install-scripts` for
-  esbuild/protobufjs/etc. and pointed at `npm install-scripts approve`. Expected: postinstall
-  scripts run automatically. Actual: they are gated by default in this npm build.
-  Workaround: none needed — verified the package works without them (live stdio probe plus
-  full end-to-end test through `call.mjs`: resolve + query + error paths all pass).
 - 2026-10-03 — Same task. **Tool deviation (recurring):** `edit` payloads again carried
   embedded `\r` characters that matched and replaced CR-free regions, written back without
   CRs (verified `grep -c $'\r'` → 0 after each edit) — same behaviour as the earlier entries;
   workaround unchanged (verify contents after every edit).
-- 2026-10-03 — Fixed a YAML error in `.pi/skills/context7/SKILL.md` reported by pi on load:
-  `Nested mappings are not allowed in compact mappings at line 2, column 14`.
-  **Tool deviation:** pi parses skill frontmatter with eemeli `yaml.parse`, which rejects an
-  unquoted plain scalar containing a colon+space sequence — the description contained
-  `…you already know the answer: training data may not reflect recent changes.`, and the
-  parser tried to read `answer:` as a nested block-mapping key. Expected (from general YAML
-  habit): long single-line values parse fine unquoted. Actual: any `: ` inside an unquoted
-  scalar breaks frontmatter parsing. Workaround: wrapped the whole `description` value in
-  double quotes (verified with the same `yaml.parse` call pi uses); quoting also guards
-  against future edits reintroducing colons.
