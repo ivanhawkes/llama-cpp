@@ -26,7 +26,7 @@ with `LLAMA_SERVER_LOG`) while echoing to the terminal, and serves Prometheus me
 | `.envrc` | direnv hook (`use flake . --impure`) |
 | `hardware.json` | fastfetch hardware snapshot (field definitions below) |
 | `.pi/` | pi agent skills/agents/npm packages for this workspace |
-| `perf-log.md` | git-tracked per-session performance log (one row per server session, monthly review) |
+| `perf-log.md` | git-tracked per-session performance log — one row per server session, **appended manually** (no script or skill writes it); review monthly |
 | `result` | symlink to the last built devShell (gitignored) |
 
 ## GPU facts (source of truth: nvidia-smi, *not* hardware.json)
