@@ -9,8 +9,8 @@
       "homeDir": "/home/ivan/",
       "exePath": "/nix/store/86j7n0si4bnw172nmxrf4c1p393kqakb-fastfetch-unwrapped-2.68.1/bin/fastfetch",
       "userShell": "/run/current-system/sw/bin/zsh",
-      "pid": 12360,
-      "cwd": "/home/ivan/flakes/llama-cpp/"
+      "pid": 45862,
+      "cwd": "/home/ivan/llama-cpp/"
     }
   },
   {
@@ -49,8 +49,8 @@
   {
     "type": "Uptime",
     "result": {
-      "uptime": 3585200,
-      "bootTime": "2026-10-03T08:52:51.421+1000"
+      "uptime": 19627640,
+      "bootTime": "2026-10-03T08:52:51.414+1000"
     }
   },
   {
@@ -67,8 +67,8 @@
       "exe": "/nix/store/svx59425zxp552p2b8gm11qj5r09b56i-bash-5.3p15/bin/bash",
       "exeName": "bash",
       "exePath": "/nix/store/svx59425zxp552p2b8gm11qj5r09b56i-bash-5.3p15/bin/bash",
-      "pid": 12358,
-      "ppid": 12302,
+      "pid": 45861,
+      "ppid": 43959,
       "processName": "bash",
       "prettyName": "bash",
       "version": "5.3.15",
@@ -162,7 +162,7 @@
       "exe": "pi",
       "exeName": "pi",
       "exePath": "/nix/store/z5piarlh57mjwr4c9w318ay97sxr6c9m-nodejs-slim-24.20.0/bin/node",
-      "pid": 12302,
+      "pid": 43959,
       "ppid": 3739,
       "prettyName": "pi",
       "version": "",
@@ -185,7 +185,7 @@
         "online": 24
       },
       "frequency": {
-        "base": 4522,
+        "base": 4099,
         "max": 4673
       },
       "coreTypes": [
@@ -260,7 +260,7 @@
     "type": "Memory",
     "result": {
       "total": 67327389696,
-      "used": 8286302208
+      "used": 17441615872
     }
   },
   {
@@ -272,14 +272,14 @@
     "result": [
       {
         "bytes": {
-          "available": 803911651328,
-          "free": 853884878848,
+          "available": 790118617088,
+          "free": 840091844608,
           "total": 982292107264,
-          "used": 128407228416
+          "used": 142200262656
         },
         "files": {
           "total": 60989440,
-          "used": 2371868
+          "used": 2466998
         },
         "filesystem": "ext4",
         "mountpoint": "/",
@@ -292,14 +292,14 @@
       },
       {
         "bytes": {
-          "available": 803911651328,
-          "free": 853884878848,
+          "available": 790118617088,
+          "free": 840091844608,
           "total": 982292107264,
-          "used": 128407228416
+          "used": 142200262656
         },
         "files": {
           "total": 60989440,
-          "used": 2371868
+          "used": 2466998
         },
         "filesystem": "ext4",
         "mountpoint": "/nix/store",
