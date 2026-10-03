@@ -14,7 +14,7 @@ holds 10142 MiB on idx0 + 5578 MiB on idx1 (MTP split live); CPU x86_64-v3 24c; 
 disk ~790GB free; hardware.json fresh; git clean; server UP on :8080 serving this agent's own
 inference (cannot restart, no second instance).
 
-- [ ] tasks.md bookkeeping: mark pass-2 "Commit regenerated hardware.json" done — why: `git status --short` clean and commit `035f75a` exists — verify: `grep -n '\[x\] Commit regenerated' .pi/self-improvement/tasks.md`
+- [x] tasks.md bookkeeping: mark pass-2 "Commit regenerated hardware.json" done — why: `git status --short` clean and commit `035f75a` exists — verify: `grep -n '\[x\] Commit regenerated' .pi/self-improvement/tasks.md`
 - [ ] README: document the observed MTP split (server holds ~10GB on idx0 + ~5.6GB on idx1) — why: nvidia-smi compute-apps shows one llama-server PID using both GPUs; flake NOTE says MTP can split across devices but README's GPU-facts section doesn't mention it — verify: `grep -n "idx1" README.md`
 - [ ] README: clarify perf-log.md rows are appended manually (carried from pass 2) — why: `grep -rn perf-log flake.nix .pi/skills` finds nothing (no automation) — verify: `grep -n "manually" README.md`
 - [ ] flake.nix: take `system` from the flake outputs instead of hardcoding `"x86_64-linux"` — why: hardcoded system limits portability; CPU fact x86_64-v3 means it works here but the flake parameter is standard practice — verify: `nix eval .#devShells.x86_64-linux.default.name --raw 2>&1 | head -5`

@@ -40,6 +40,11 @@ nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader
 fastfetch's GPU list order is arbitrary — never use `hardware.json` to decide CUDA indices.
 If the index mapping ever changes, `run-server` fails fast with a clear message (preflight guard).
 
+Observed live (2026-10-03): one running `llama-server` process holds ~10GB on idx0 **and**
+~5.6GB on idx1 — this build splits the MTP draft across both GPUs (see the NOTE in
+`flake.nix`). So VRAM contention on *either* card can break startup, even though the
+preflight only checks free VRAM on idx0.
+
 ## Model & cache
 
 - Model: `ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S` (~15GB), pulled from Hugging Face on first start.
