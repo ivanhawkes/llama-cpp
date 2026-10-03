@@ -1,5 +1,19 @@
 # Project instructions for agents
 
+## Performance metrics
+
+"Performance metrics" (including "your performance metrics") refers to a pair of log files
+holding metrics on the LLM that hosts this agent:
+
+- `/tmp/llama-server.log` — full llama-server session log (per-request prompt/eval times,
+  TTFT, tokens/s).
+- `logs/perf-watch.log` — periodic perf-watch rollups (session totals, MTP acceptance,
+  per-request stats, VRAM usage).
+
+These are kept so the user can watch for degradations or improvements in the agent's
+performance. When asked about performance metrics, read these files rather than looking
+for agent-side instrumentation.
+
 ## GPU pinning
 
 Do **not** pin the GPU with `CUDA_VISIBLE_DEVICES` in this project (user instruction,
