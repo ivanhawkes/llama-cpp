@@ -64,7 +64,6 @@
           -ctk q4_0 \
           -ctv q4_0 \
           -c 65536 \
-          --parallel 1 \
           --image-min-tokens 1024 \
           --flash-attn on \
           --agent \
