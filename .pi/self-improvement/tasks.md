@@ -17,8 +17,8 @@ inference (cannot restart, no second instance).
 - [x] tasks.md bookkeeping: mark pass-2 "Commit regenerated hardware.json" done — why: `git status --short` clean and commit `035f75a` exists — verify: `grep -n '\[x\] Commit regenerated' .pi/self-improvement/tasks.md`
 - [x] README: document the observed MTP split (server holds ~10GB on idx0 + ~5.6GB on idx1) — ✅ verified 2026-10-03: `grep -n "idx1" README.md` hits, committed as `3afae7a`
 - [x] README: clarify perf-log.md rows are appended manually (carried from pass 2) — ✅ verified 2026-10-03: `grep -n "manually" README.md` hits
-- [ ] flake.nix: take `system` from the flake outputs instead of hardcoding `"x86_64-linux"` — why: hardcoded system limits portability; CPU fact x86_64-v3 means it works here but the flake parameter is standard practice — verify: `nix eval .#devShells.x86_64-linux.default.name --raw 2>&1 | head -5`
-- [ ] Baseline `nix flake check` and record result in Agent notes — why: no record of it ever running (absent from agent notes) — verify: `nix flake check > /tmp/flake-check.log 2>&1; tail -30 /tmp/flake-check.log`
+- [ ] flake.nix: take `system` from the flake outputs instead of hardcoding `"x86_64-linux"` — carried to pass 4; removed there (blocked in this environment, see Removed)
+- [x] Baseline `nix flake check` and record result in Agent notes — ✅ done in pass 4 (exit 0, "all checks passed!")
 
 ## Pass 4 (2026-10-03)
 
@@ -29,10 +29,14 @@ both cards, serving this agent's own inference → e2e smoke-test stays blocked)
 git clean; README covers layout/pitfalls/repro steps.
 
 - [x] Baseline `nix flake check` and record result in Agent notes — ✅ verified 2026-10-03: exit 0, "all checks passed!" (`/tmp/flake-check.log`); recorded in README Agent notes
-- [ ] flake.nix: take `system` from the flake outputs (`finalSystem`) instead of hardcoding `"x86_64-linux"` — why: hardcoded system limits portability; CPU fact x86_64-v3 means it works here but the flake parameter is standard practice — verify: `nix eval .#devShells.x86_64-linux.default.name --raw 2>&1 | head -5` — depends on: baseline `nix flake check` (baseline must exist before the change)
 
 ## Removed
 
 - 2026-10-03: "Add `export CUDA_VISIBLE_DEVICES=0` to run-server" — user instruction: never pin
   the GPU with `CUDA_VISIBLE_DEVICES` in this project (standing rule now in AGENTS.md).
   All references removed from flake.nix and README.md.
+- 2026-10-03: "flake.nix: use `finalSystem` instead of hardcoded `x86_64-linux"` — blocked in
+  this environment, not deferred: nix 2.34.8 fails both `nix eval` and `nix flake check`
+  with "cannot find flake 'flake:finalSystem' in the flake registries" (tries to add a
+  lock-file entry for it); `--system` is a restricted setting for untrusted users, so no
+  workaround. Reverted; explicit `system = "x86_64-linux"` stays. See README Agent notes.

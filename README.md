@@ -183,3 +183,13 @@ happened, resolution/workaround.
 - 2026-10-03 — Self-improvement pass 4. **Baseline `nix flake check`: passed** (exit 0,
   "all checks passed!"; only warning was the expected dirty-tree notice from in-flight
   `tasks.md` edits). First recorded run of this check; no deviations observed.
+- 2026-10-03 — Same pass. **Tool deviation:** switching the flake to the standard
+  `finalSystem` pattern broke both `nix eval .#devShells.x86_64-linux.default.name --raw`
+  and `nix flake check` with "error: cannot find flake 'flake:finalSystem' in the flake
+  registries" (nix 2.34.8 tries to add a lock-file entry for the `finalSystem` input).
+  Expected: `finalSystem` is a special input nix fills in automatically. Actual: it is
+  resolved via the flake registries and fails; `--system x86_64-linux` is not a workaround
+  because `system` is a restricted setting for untrusted users ("ignoring the
+  client-specified setting 'system'"), and `--no-update-lock-file` does not help either.
+  Workaround: reverted to the explicit `system = "x86_64-linux"`; `nix flake check` passes
+  again. The portability task is blocked in this environment, not just deferred.
