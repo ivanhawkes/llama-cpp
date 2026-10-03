@@ -218,6 +218,23 @@ happened, resolution/workaround.
   missing files were `scripts/perf-watch` and `logs/perf-watch.log`. Resolution: recreated the
   script (TTFT derived from log prefill lines, since `/metrics` has no TTFT metric in this
   build); added `logs/` to `.gitignore` since the watch log is appended on every run.
+- 2026-10-03 — Created a TODO task for the Context7 install (Option A) and wrote a handoff
+  doc (`/tmp/handoff-llama-cpp-context7-mcp.md`). **Ambiguity:** "create a TODO task" had no
+  defined home — `.pi/self-improvement/tasks.md` is scoped to self-improvement passes, and the
+  `to-spec`/`to-tickets` skills expect an external tracker that is not configured in this repo.
+  Resolved by creating `TODO.md` at the repo root as the general task list. **Verification:**
+  live-probed `@upstash/context7-mcp` v4.1.1 over stdio in this env — it works, and its docs
+  tool is named `query-docs` (not `get-library-docs` as first assumed); exact tool schemas are
+  recorded in the handoff doc.
+- 2026-10-03 — Advised on installing the Context7 MCP server into the pi harness.
+  **Ambiguity:** "install an MCP server into pi" has no literal meaning here — pi 0.87.1
+  ships no MCP support at all (verified: zero `mcp` references in the pi monorepo source and
+  docs; the bundled harness README states pi deliberately has no MCP and everything is built
+  from skills/prompt templates/extensions/packages). Resolved by offering two bridge designs:
+  (a) a `.pi/skills/context7/` skill with a bundled stdio JSON-RPC script (recommended,
+  harness-idiomatic, zero pi code), or (b) a pi extension that spawns the server on
+  `session_start` and registers its tools natively via `pi.registerTool()`. No install was
+  performed; advice only.
 - 2026-10-03 — Summarised "performance metrics for the last hour" (15:17–16:17 AEST).
   **Ambiguity:** that window spans two server sessions — the previous session ended at
   15:54 and its per-request log was truncated on restart, so no per-request data survives
