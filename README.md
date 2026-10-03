@@ -43,7 +43,9 @@ If the index mapping ever changes, `run-server` fails fast with a clear message 
 ## Model & cache
 
 - Model: `ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S` (~15GB), pulled from Hugging Face on first start.
-- Cache: `$HF_HOME` — the devShell pins it to `$PWD/.hf-cache` (gitignored).
+- Cache: `.hf-cache/` in the repo root (gitignored). `HF_HOME` is exported by the devShell
+  shellHook as `$PWD/.hf-cache` (expanded at shell start — a flake-level `env` value would stay
+  literal, since Nix does not expand `$PWD`).
 
 ## hardware.json field definitions
 
@@ -107,3 +109,8 @@ happened, resolution/workaround.
   logging/metrics. New shells (direnv/`nix develop`, `result` wrapper) resolve the new script
   (`grb6g6…`). Workaround: restart the server from a fresh shell; confirm `/tmp/llama-server.log`
   appears.
+- 2026-10-03 — Fixed `HF_HOME` in the devShell. **Nix/shell issue:** `HF_HOME = "$PWD/.hf-cache"`
+  in the flake's `env` is a literal string (Nix only interpolates `${...}`, never `$VAR`), so
+  huggingface_hub created a literal `$PWD/` directory in the repo root and cached the ~22GB model
+  there. Fix: export `HF_HOME="$PWD/.hf-cache"` in `shellHook` where the shell expands it; moved
+  the existing cache to `.hf-cache/` (already gitignored).

@@ -124,12 +124,15 @@
         
         env = {
           TMPDIR = "/tmp";
-          # Deterministic Hugging Face model cache for this workspace
-          # (run-server inherits it; ~15GB model lands here on first start).
-          HF_HOME = "$PWD/.hf-cache";
         };
 
         shellHook = ''
+          # Deterministic Hugging Face model cache for this workspace
+          # (run-server inherits it; ~15GB model lands here on first start).
+          # Must be exported in the shell, not via `env`: Nix does not expand
+          # $PWD, so a flake-level value would be the literal string "$PWD/.hf-cache".
+          export HF_HOME="$PWD/.hf-cache"
+
           # Isolate npm paths to prevent NixOS global write permission issues
           export NPM_CONFIG_PREFIX="$PWD/.pi/npm"
           export PATH="$PWD/.pi/npm/bin:$PATH"

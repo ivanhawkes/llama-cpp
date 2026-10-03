@@ -5,7 +5,8 @@ One row per server session (start → stop), appended as sessions complete; revi
 Sources: `prompt eval time` / `eval time` lines in `/tmp/llama-server.log`,
 `curl -s localhost:8080/metrics` (Prometheus), `nvidia-smi`.
 
-**Rollup (last 30 days):** _no completed sessions yet_
+**Rollup (last 30 days):** 1 in-progress session (started 2026-10-03T02:34Z): 7 reqs, ~720 prompt t/s, ~35.8 gen t/s, tokens p/g 1.7
 
 | started (UTC) | model | reqs | prompt tok/s | gen tok/s | tokens p/g | insight |
 |---|---|---|---|---|---|---|
+| 2026-10-03T02:34Z | Qwen3.8-27B IQ3_S | 7 (in progress) | ~720 | ~35.8 | 1.7 | MTP draft acceptance ~0.78 (mean len ~2.5) sustains ~36 t/s gen; prompt eval ~720–796 t/s; gen slows on long outputs (33.8 t/s @ 3.6k tok) |
