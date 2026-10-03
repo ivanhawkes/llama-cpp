@@ -121,3 +121,9 @@ happened, resolution/workaround.
   llama.cpp can split MTP across multiple GPU devices). Resolved: removed all references to a
   pin from `flake.nix` and `README.md`; added a standing rule to `AGENTS.md` and the
   self-improvement skill so future passes do not propose it.
+- 2026-10-03 — Self-improvement pass (smoke-test port fix). **Constraint:** full
+  end-to-end verification of `SMOKE_TEST_PORT` is blocked while the main server runs —
+  it holds ~15GB of the 16GB VRAM, so a second `llama-server` would OOM at load, and the
+  live server serves this agent's own inference (cannot simply be stopped). Verified by
+  inspecting the rebuilt script instead (`run-server --port "$PORT"` present). An e2e run
+  needs a window with no other server occupying VRAM: `SMOKE_TEST_PORT=8123 smoke-test`.

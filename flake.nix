@@ -80,7 +80,9 @@
         [ -z "$TIMEOUT" ] && TIMEOUT=300
         LOG=/tmp/llama-smoke-test.log
 
-        run-server > "$LOG" 2>&1 &
+        # Pass the port through so SMOKE_TEST_PORT controls both the server's bind
+        # port and the polled URL (run-server forwards "$@" to llama-server).
+        run-server --port "$PORT" > "$LOG" 2>&1 &
         PID=$!
         trap 'kill $PID 2>/dev/null' EXIT
 
