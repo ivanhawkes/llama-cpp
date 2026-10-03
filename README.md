@@ -143,3 +143,11 @@ happened, resolution/workaround.
   live server serves this agent's own inference (cannot simply be stopped). Verified by
   inspecting the rebuilt script instead (`run-server --port "$PORT"` present). An e2e run
   needs a window with no other server occupying VRAM: `SMOKE_TEST_PORT=8123 smoke-test`.
+- 2026-10-03 — Added a free-VRAM preflight to `run-server` (fail fast if < 12000 MiB free on
+  index 0). **Tool deviation:** after `nix build .#devShells.x86_64-linux.default`, the `result`
+  symlink points at an *internal mkShell env file* (`…-nix-shell`, a ~13KB text file of
+  `declare -x` lines), not a directory — so `result/bin/run-server` fails with "Not a
+  directory". Expected: `result` to be the built devShell dir with a `bin/`. Workaround:
+  extract the real script path from the env file (`grep -o '/nix/store/[a-z0-9]*-run-server'
+  result`) or use `nix shell . --command run-server`; verify behaviour by running that store
+  path directly.

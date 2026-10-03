@@ -34,6 +34,15 @@
                echo "   Check mapping: nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader" >&2
                exit 1 ;;
           esac
+
+          # Preflight: enough free VRAM on index 0 for the ~12GB model + KV cache.
+          # A second instance while another server runs would OOM obscurely at load time.
+          GPU_FREE=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader -i 0 | awk '{print $1}')
+          if [ "$GPU_FREE" -lt 12000 ]; then
+            echo "❌ Only $GPU_FREE MiB free on CUDA index 0; need >= 12000 MiB for the model." >&2
+            echo "   Another server is likely holding VRAM: nvidia-smi --query-gpu=index,memory.used,memory.free --format=csv,noheader" >&2
+            exit 1
+          fi
         fi
 
         # NOTE: The model we are running 'ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S' is an MTP model
