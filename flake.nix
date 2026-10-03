@@ -56,25 +56,26 @@
         # terminal, so output stays viewable and can be monitored after the fact.
         LOG=/tmp/llama-server.log
         [ -n "$LLAMA_SERVER_LOG" ] && LOG=$LLAMA_SERVER_LOG
-        echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] run-server: session log -> $LOG"
-
-        ${llamaCppPackage}/bin/llama-server \
-          --host 0.0.0.0 -hf ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S \
-          -ngl 99 \
-          -ctk q4_0 \
-          -ctv q4_0 \
-          -c 65536 \
-          --image-min-tokens 1024 \
-          --flash-attn on \
-          --agent \
-          --spec-type draft-mtp \
-          --spec-draft-n-max 2 \
-          --temperature 0.1 \
-          --top-p 0.95 \
-          --min-p 0.05 \
-          --repeat-penalty 1.05 \
-          --metrics \
-          --chat-template-kwargs '{"reasoning_effort":"xhigh"}' "$@" 2>&1 | tee "$LOG"
+        # The UTC start marker is emitted inside the pipeline so it lands in
+        # $LOG as well (a bare echo would go only to the terminal).
+        { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] run-server: session log -> $LOG"; \
+          ${llamaCppPackage}/bin/llama-server \
+            --host 0.0.0.0 -hf ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S \
+            -ngl 99 \
+            -ctk q4_0 \
+            -ctv q4_0 \
+            -c 65536 \
+            --image-min-tokens 1024 \
+            --flash-attn on \
+            --agent \
+            --spec-type draft-mtp \
+            --spec-draft-n-max 2 \
+            --temperature 0.1 \
+            --top-p 0.95 \
+            --min-p 0.05 \
+            --repeat-penalty 1.05 \
+            --metrics \
+            --chat-template-kwargs '{"reasoning_effort":"xhigh"}' "$@" 2>&1; } | tee "$LOG"
       '';
 
       # Smoke test: start run-server, poll /health until healthy (or timeout),

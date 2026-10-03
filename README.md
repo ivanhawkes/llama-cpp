@@ -163,3 +163,24 @@ happened, resolution/workaround.
   a fresh `pi -p` session: resolve-library-id → `/ggml-org/llama.cpp`, query-docs →
   `--ctx-size`. Note: the official tools return API output untruncated (the old bridge capped
   at 12000 chars for the 48k window) — keep queries to one narrow topic.
+- 2026-10-03 — "Check if your performance metrics have changed from 1 hour ago." **Ambiguity:**
+  "your performance metrics" has no referent for the agent itself (no queryable agent metrics);
+  resolved as the llama-server's `--metrics` endpoint + `perf-log.md` baseline, since that is
+  the only performance data this repo tracks. **Data inconsistency found:** the perf-log session
+  row "2026-10-03T02:34Z–15:54Z" cannot both be UTC — the rollup's file mtime (local 15:59 =
+  05:59Z) predates a 15:54Z end; the times are most likely local (UTC+10) mislabelled as UTC.
+  Consequence for the check: no server was running 1 h ago (current process started 13:20:48Z,
+  ~2 min before the question), so no hour-ago metrics exist to compare against; compared against
+  the last completed session's rollup instead (prompt 827 vs ~720 t/s; gen 33.4–35.5 vs ~35.8
+  t/s; MTP acceptance 0.65 vs ~0.78 — within normal range for a 2-request sample).
+- 2026-10-03 — Verified TZ stamps on perf-log.md entries. **Ambiguity:** the session row and
+  rollup carried `Z` (UTC) suffixes, but the values were local AEST wall-clock times — proven by
+  perf-log.md's own mtime (15:59:53+1000 = 05:59:53Z), which predates a claimed 15:54Z end; the
+  only consistent reading is local UTC+10. Fixed both entries to true UTC (start
+  2026-10-02T16:34Z, end 2026-10-03T05:54Z). **Shell issue:** run-server's UTC start marker was a
+  bare `echo` outside the `| tee "$LOG"` pipeline, so it never reached /tmp/llama-server.log
+  (expected per README "tees all server output"; actual: terminal-only) — the session log had no
+  absolute timestamp at all (llama.cpp lines are relative to start), which is how the mislabel
+  happened. Fixed by grouping the echo into the pipeline (`{ echo ...; llama-server ...; } | tee
+  "$LOG"`); verified in the rebuilt script text + `bash -n` (e2e blocked: no second server instance
+  while the main one runs).
