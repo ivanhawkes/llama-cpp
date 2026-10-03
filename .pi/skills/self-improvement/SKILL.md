@@ -78,7 +78,7 @@ Rules:
 - If executing a task reveals that a later task was actually its prerequisite, reorder the
   remaining tasks in `tasks.md` (prerequisite first) before continuing.
 - If a command's output exceeds ~30 lines, save it to a file and read only the relevant part.
-- Stop after 3 tasks or when the user says so; remaining tasks stay in `tasks.md` for the next session.
+- Stop after each task; remaining tasks stay in `tasks.md` for the next session.
 
 ## Improvement areas (for deriving tasks)
 
