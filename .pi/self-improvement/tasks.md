@@ -20,6 +20,17 @@ inference (cannot restart, no second instance).
 - [ ] flake.nix: take `system` from the flake outputs instead of hardcoding `"x86_64-linux"` — why: hardcoded system limits portability; CPU fact x86_64-v3 means it works here but the flake parameter is standard practice — verify: `nix eval .#devShells.x86_64-linux.default.name --raw 2>&1 | head -5`
 - [ ] Baseline `nix flake check` and record result in Agent notes — why: no record of it ever running (absent from agent notes) — verify: `nix flake check > /tmp/flake-check.log 2>&1; tail -30 /tmp/flake-check.log`
 
+## Pass 4 (2026-10-03)
+
+Fact sheet: idx0 = RTX 5060 Ti 16311 MiB (4993 free), idx1 = RTX 4060 8188 MiB (2286 free)
+(nvidia-smi) — matches run-server's preflight guard; server live (PID 47910, MTP split across
+both cards, serving this agent's own inference → e2e smoke-test stays blocked); CPU x86_64-v3
+24c; RAM ~67GB; disk ~790GB free; driver nvidia open 615.71.09; hardware.json fresh (Oct 3);
+git clean; README covers layout/pitfalls/repro steps.
+
+- [x] Baseline `nix flake check` and record result in Agent notes — ✅ verified 2026-10-03: exit 0, "all checks passed!" (`/tmp/flake-check.log`); recorded in README Agent notes
+- [ ] flake.nix: take `system` from the flake outputs (`finalSystem`) instead of hardcoding `"x86_64-linux"` — why: hardcoded system limits portability; CPU fact x86_64-v3 means it works here but the flake parameter is standard practice — verify: `nix eval .#devShells.x86_64-linux.default.name --raw 2>&1 | head -5` — depends on: baseline `nix flake check` (baseline must exist before the change)
+
 ## Removed
 
 - 2026-10-03: "Add `export CUDA_VISIBLE_DEVICES=0` to run-server" — user instruction: never pin

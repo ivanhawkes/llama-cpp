@@ -180,3 +180,6 @@ happened, resolution/workaround.
   reported "Everything up-to-date" instead of pushing them — verified `main == origin/main`
   and empty `git log origin/main..HEAD`, so no commits were lost; the remote had already been
   synced by something else (mechanism unknown).
+- 2026-10-03 — Self-improvement pass 4. **Baseline `nix flake check`: passed** (exit 0,
+  "all checks passed!"; only warning was the expected dirty-tree notice from in-flight
+  `tasks.md` edits). First recorded run of this check; no deviations observed.
