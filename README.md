@@ -105,3 +105,21 @@ happened, resolution/workaround.
   invocation/instruction (this README's command was already fixed; `.pi/skills/self-improvement/
   SKILL.md` regeneration step + guardrail) and left the historical quote unchanged so the record
   stays accurate.
+- 2026-10-05 — Hardware upgrade review: `lspci` is not installed in the dev shell, and the
+  `subordinate_bus` sysfs attribute was absent on every PCI bridge, so the physical slot of the
+  RTX 5060 Ti could not be determined from software. Workaround: used
+  `nvidia-smi --query-gpu=pcie.link.gen.current,pcie.link.width.current` plus
+  `/sys/bus/pci/devices/*/current_link_{width,speed}` — confirmed the card runs at Gen4 x8
+  (card supports Gen5 x16; the AM4 platform caps at Gen4). Slot placement needs a physical check.
+- 2026-10-05 — Tool deviation: fastfetch's `PhysicalMemory` module fails ("Failed to get SMBIOS
+  data"), so `hardware.json` carries no DIMM count/speed — RAM facts are limited to
+  `Memory.total`. No workaround found short of root `dmidecode`.
+- 2026-10-04 — Tool deviation: a struct-based GGUF metadata parser assuming the classic
+  `gguf.h` value-type enum (8 = float32) crashed on the loaded model file; in this file
+  (GGUF v3, llama.cpp 0.5.0) value type 8 is a length-prefixed string (uint64 len + bytes).
+  Per user instruction, parsing was abandoned entirely — KV-cache size for the 128k
+  feasibility estimate was derived from published Qwen3-family architecture info
+  (Qwen3-32B-like: 64 layers, 8 KV heads, head_dim 128) instead of file metadata.
+- 2026-10-04 — Ambiguity: the loaded "main" model is the `...-IQ3_S-mtp.gguf` file (it
+  contains the MTP heads); no separate main GGUF exists in the cache. The `-mtp` suffix
+  naming is misleading — it *is* the model, not an add-on.
