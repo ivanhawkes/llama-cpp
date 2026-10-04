@@ -52,6 +52,14 @@
         # fallback for non-NixOS use where /run/opengl-driver does not exist.
         export LD_LIBRARY_PATH="/run/opengl-driver/lib:/run/opengl-driver-32/lib:$LD_LIBRARY_PATH"
         
+        # Let's see that version number.
+        echo VERSIONS
+        echo ${llamaCppPackage}/bin/llama-server
+        echo `${llamaCppPackage}/bin/llama-server --version`
+        echo VERSIONS
+        echo `llama-server --version`
+        echo VERSIONS
+
         # Log the whole session to $LOG (fresh per start) while echoing to the
         # terminal, so output stays viewable and can be monitored after the fact.
         LOG=/tmp/llama-server.log
@@ -60,13 +68,15 @@
         # $LOG as well (a bare echo would go only to the terminal).
         { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] run-server: session log -> $LOG"; \
           ${llamaCppPackage}/bin/llama-server \
-            --host 0.0.0.0 -hf ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S \
+            -hf ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S \
             -ngl 99 \
             -ctk q4_0 \
             -ctv q4_0 \
             -c 65536 \
             --image-min-tokens 1024 \
             --flash-attn on \
+            -ts 1,2 \
+            -sm tensor \
             --agent \
             --spec-type draft-mtp \
             --spec-draft-n-max 2 \
