@@ -22,6 +22,10 @@
       runServer = pkgs.writeShellScriptBin "run-server" ''
         echo "🤖 Launching local GPU inference engine (Coding Optimization)..."
 
+        # Setting CUDA_DEVICE_ORDER=PCI_BUS_ID forces the CUDA runtime to assign its indices matching the 
+        # physical PCIe bus order rather than performance metrics. 
+        export CUDA_DEVICE_ORDER=PCI_BUS_ID
+
         # Preflight: verify physical GPU index 0 is actually the RTX 5060 Ti.
         # llama.cpp loads onto device 0 first, and the model (~15GB) does not fit on
         # the RTX 4060 (8GB), so a stale index mapping would fail obscurely at
@@ -53,12 +57,8 @@
         export LD_LIBRARY_PATH="/run/opengl-driver/lib:/run/opengl-driver-32/lib:$LD_LIBRARY_PATH"
         
         # Let's see that version number.
-        echo VERSIONS
+        echo Llama.cpp version number:
         echo ${llamaCppPackage}/bin/llama-server
-        echo `${llamaCppPackage}/bin/llama-server --version`
-        echo VERSIONS
-        echo `llama-server --version`
-        echo VERSIONS
 
         # Log the whole session to $LOG (fresh per start) while echoing to the
         # terminal, so output stays viewable and can be monitored after the fact.
@@ -77,7 +77,7 @@
             -c 65536 \
             --image-min-tokens 1024 \
             --flash-attn on \
-            -ts 1,2 \
+            -ts 2,1 \
             -sm tensor \
             --agent \
             --spec-type draft-mtp \
