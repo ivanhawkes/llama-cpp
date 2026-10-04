@@ -18,6 +18,17 @@ Server log during the test: `/tmp/llama-smoke-test.log`.
 with `LLAMA_SERVER_LOG`) while echoing to the terminal, and serves Prometheus metrics at
 `http://localhost:8080/metrics`. Per-session performance summaries are appended to `perf-log.md`.
 
+llama-server.log outputs a timestamp using a structured, high-precision format that represents elapsed time in Minutes.Seconds.Milliseconds.Microseconds.
+The exact pattern layout used by the internal logger looks like this:
+
+[M.s.ms.us]
+
+Format:
+- M: Minutes elapsed since the process or logger initialized.
+- s: Seconds (00–59).
+- ms: Milliseconds (3 digits).
+- us: Microseconds (3 digits).
+
 ## Repo layout
 
 | Path | Purpose |
@@ -39,11 +50,6 @@ nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader
 
 fastfetch's GPU list order is arbitrary — never use `hardware.json` to decide CUDA indices.
 If the index mapping ever changes, `run-server` fails fast with a clear message (preflight guard).
-
-Observed live (2026-10-03): one running `llama-server` process holds ~10GB on idx0 **and**
-~5.6GB on idx1 — this build splits the MTP draft across both GPUs (see the NOTE in
-`flake.nix`). So VRAM contention on *either* card can break startup, even though the
-preflight only checks free VRAM on idx0.
 
 ## Model & cache
 
@@ -139,69 +145,6 @@ happened, resolution/workaround.
   embedded `\r` characters that matched and replaced CR-free regions, written back without
   CRs (verified `grep -c $'\r'` → 0 after each edit) — same behaviour as the earlier entries;
   workaround unchanged (verify contents after every edit).
-- 2026-10-03 — Researched proper invocation of the local `context7` skill. **Ambiguity:** "the
-  /context7 skill" conflates two things — pi's local skill (forced via `/skill:context7 <request>`,
-  per `docs/skills.md`; args are appended to the loaded instructions) and Context7's own prompt
-  conventions (`use context7`, `use library /org/project`). Resolved by reading both pi's skills
-  doc and Context7's official docs (context7.com/docs + upstash/context7 README): local skill is
-  auto-routed by description or forced with `/skill:context7`; the `use …` phrases are prompt-level
-  triggers for MCP clients. **Tool deviations:** `docs.context7.com` does not resolve (DNS failure);
-  docs live at `context7.com/docs` (append `.md` for markdown, index at `/docs/llms.txt`, search at
-  `/docs/search?q=`). GitHub raw fetch of the README on branch `main` 404s — the repo's default
-  branch is `master`. Workaround: use those URLs/branch directly.
-- 2026-10-03 — Replaced the hand-rolled Context7 bridge with the official
-  `@upstash/context7-pi` extension (`pi install -l npm:@upstash/context7-pi`); retired
-  `.pi/skills/context7/` (SKILL.md + `scripts/call.mjs`) and removed the now-unneeded
-  `@upstash/context7-mcp` dependency from `.pi/npm`. **Ambiguity:** "retire scripts/call.mjs"
-  could mean deleting only the script; resolved as retiring the whole local skill, since its
-  SKILL.md existed solely to drive call.mjs and the official extension ships its own
-  `context7-docs` skill (keeping both would double-route library questions). **Tool
-  deviation:** `pi install -l` re-resolved `.pi/npm` against package.json and pruned 235
-  packages on its own (expected: only the new package added) — harmless, tree verified by
-  listing node_modules; a follow-up manual `npm prune` printed an "install-scripts" approval
-  warning for protobufjs postinstall (newer-npm behaviour), also benign. Verified end-to-end in
-  a fresh `pi -p` session: resolve-library-id → `/ggml-org/llama.cpp`, query-docs →
-  `--ctx-size`. Note: the official tools return API output untruncated (the old bridge capped
-  at 12000 chars for the 48k window) — keep queries to one narrow topic.
-- 2026-10-03 — "Check if your performance metrics have changed from 1 hour ago." **Ambiguity:**
-  "your performance metrics" has no referent for the agent itself (no queryable agent metrics);
-  resolved as the llama-server's `--metrics` endpoint + `perf-log.md` baseline, since that is
-  the only performance data this repo tracks. **Data inconsistency found:** the perf-log session
-  row "2026-10-03T02:34Z–15:54Z" cannot both be UTC — the rollup's file mtime (local 15:59 =
-  05:59Z) predates a 15:54Z end; the times are most likely local (UTC+10) mislabelled as UTC.
-  Consequence for the check: no server was running 1 h ago (current process started 13:20:48Z,
-  ~2 min before the question), so no hour-ago metrics exist to compare against; compared against
-  the last completed session's rollup instead (prompt 827 vs ~720 t/s; gen 33.4–35.5 vs ~35.8
-  t/s; MTP acceptance 0.65 vs ~0.78 — within normal range for a 2-request sample).
-- 2026-10-03 — Verified TZ stamps on perf-log.md entries. **Ambiguity:** the session row and
-  rollup carried `Z` (UTC) suffixes, but the values were local AEST wall-clock times — proven by
-  perf-log.md's own mtime (15:59:53+1000 = 05:59:53Z), which predates a claimed 15:54Z end; the
-  only consistent reading is local UTC+10. Fixed both entries to true UTC (start
-  2026-10-02T16:34Z, end 2026-10-03T05:54Z). **Shell issue:** run-server's UTC start marker was a
-  bare `echo` outside the `| tee "$LOG"` pipeline, so it never reached /tmp/llama-server.log
-  (expected per README "tees all server output"; actual: terminal-only) — the session log had no
-  absolute timestamp at all (llama.cpp lines are relative to start), which is how the mislabel
-  happened. Fixed by grouping the echo into the pipeline (`{ echo ...; llama-server ...; } | tee
-  "$LOG"`); verified in the rebuilt script text + `bash -n` (e2e blocked: no second server instance
-  while the main one runs).
-- 2026-10-03 — Wrote a perf-log.md entry for the live session (started 13:44Z). **Ambiguity:**
-  "write a log entry" had two unresolved points. (1) The log's convention is to append rows as
-  sessions *complete*, but the current session was still running — resolved by writing an
-  in-progress row marked "ongoing, as of 13:49Z", with totals computed from the per-request
-  `prompt eval time` / `eval time` lines in /tmp/llama-server.log (cross-checked against the
-  /metrics counters, which matched exactly for the first 6 requests). (2) The user stated they
-  had deleted the performance log prior to the previous prompt, but perf-log.md was still on
-  disk with its original content and `git status` clean — verified on disk rather than assuming,
-  and appended to the existing file instead of recreating it from scratch.
-- 2026-10-04 — User deleted perf-log.md; asked for a check that performance records keep
-  consistent time/date/timezone. **Ambiguity:** "consistent" could mean unambiguous values or a
-  uniform convention — resolved by checking both. Findings: all values were correct (session
-  marker `[2026-10-03T14:00:12Z]` matches the process start time exactly; perf-watch's
-  `+1000` stamp converted exactly to `date -u`; clock NTP-synced), but conventions were mixed —
-  `perf-watch` stamped local AEST (`%z`) while the session marker and perf-log.md use UTC `Z`,
-  so one session spans two calendar dates across logs. Fixed: `scripts/perf-watch` now uses
-  `date -u '+%Y-%m-%dT%H:%M:%SZ'`; regenerated `logs/perf-watch.log` (its first block was a test
-  run from this check) and verified the stamp equals `date -u`.
 - 2026-10-04 — Added an "Execution hardware" section to AGENTS.md pointing at `hardware.json`
   as the authoritative spec of the machine hosting the LLM. **Ambiguity:** the request said
   "the LLM this pi harness is talking to is documented in hardware.json", but `hardware.json`

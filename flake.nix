@@ -68,6 +68,8 @@
         # $LOG as well (a bare echo would go only to the terminal).
         { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] run-server: session log -> $LOG"; \
           ${llamaCppPackage}/bin/llama-server \
+            --log-timestamps \
+            --log-prefix \
             -hf ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S \
             -ngl 99 \
             -ctk q4_0 \
