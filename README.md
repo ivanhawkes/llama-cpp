@@ -99,3 +99,9 @@ happened, resolution/workaround.
   decisions rely on — and the previously committed snapshot (same fastfetch version) did
   contain `Disk`, so it was generated with a non-default preset. Workaround: regenerate with
   `fastfetch -c all --format json > hardware.json` and updated the command above.
+- 2026-10-05 — User asked to update all fastfetch references to pass `-c all`. Ambiguity: some
+  mentions are not invocations (e.g. "fastfetch hardware snapshot", the flake's package dep) and
+  one is a historical note quoting the old `--format json` command. Resolved: updated every
+  invocation/instruction (this README's command was already fixed; `.pi/skills/self-improvement/
+  SKILL.md` regeneration step + guardrail) and left the historical quote unchanged so the record
+  stays accurate.

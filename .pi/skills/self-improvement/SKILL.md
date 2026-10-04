@@ -14,7 +14,7 @@ This skill must never overflow the context window. Enforce:
 
 ## Phase 1 — Lightweight scan (bounded reads only)
 
-1. **Fresh hardware facts.** `find hardware.json -mtime +7` → if stale or missing, regenerate: `fastfetch --format json > hardware.json` (commit after).
+1. **Fresh hardware facts.** `find hardware.json -mtime +7` → if stale or missing, regenerate: `fastfetch -c all --format json > hardware.json` (commit after).
    Then extract only what decisions need (~5 lines of output):
 
    ```bash
@@ -105,6 +105,6 @@ Keep it concrete and short. No generic NixOS advice that doesn't apply to this r
 - Never propose or add `CUDA_VISIBLE_DEVICES` pinning in this repo (standing rule — see
   AGENTS.md). The preflight guard in `run-server` (index 0 must be the RTX 5060 Ti) is the
   only GPU-ordering contract; treat any reference claiming a pin exists as a bug to remove.
-- Don't hand-edit `hardware.json`; regenerate it with fastfetch instead.
+- Don't hand-edit `hardware.json`; regenerate it with `fastfetch -c all --format json > hardware.json` instead.
 - Prefer user-level changes in the flake/devShell over system-level (root) changes.
 - Verify a nixpkgs package exists before suggesting it: `nix eval nixpkgs#<attr> --raw 2>&1 | head -5` (flake syntax; note some packages live under sub-sets, e.g. `nixpkgs#linuxPackages.nvidia_x11.open`).
