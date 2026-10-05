@@ -67,6 +67,15 @@ let
         --chat-template-kwargs '{"reasoning_effort":"xhigh"}' "$@" 2>&1; } | tee "$LOG"
   '';
 
+  # Headless browser MCP server for the pi harness (see .pi/mcp.json).
+  # Pinned by Nix so the harness's web tooling is reproducible. The wrapper
+  # bridges the store paths because mcp.json does not expand ${VAR} in args.
+  playwrightMcp = cudaPkgs.writeShellScriptBin "playwright-mcp" ''
+    exec ${cudaPkgs.playwright-mcp}/bin/playwright-mcp \
+      --headless \
+      --executable-path ${cudaPkgs.chromium}/bin/chromium "$@"
+  '';
+
   # Pre-flight smoke validation runner
   smokeTest = cudaPkgs.writeShellScriptBin "smoke-test" ''
     PORT=$SMOKE_TEST_PORT
@@ -127,6 +136,7 @@ in
     cudaPkgs.gh
     runServer
     smokeTest
+    playwrightMcp
     cudaPkgs.linuxPackages.nvidia_x11.open
   ];
 

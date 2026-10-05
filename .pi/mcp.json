@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "web": {
+      "command": "playwright-mcp",
+      "description": "Headless Chromium: navigate pages, click, fill forms, extract rendered text, take screenshots"
+    }
+  }
+}

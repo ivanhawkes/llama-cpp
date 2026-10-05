@@ -15,6 +15,9 @@ result
 devenv.local.nix
 devenv.local.yaml
 
+# Playwright MCP runtime artifacts (page snapshots)
+.playwright-mcp/
+
 # direnv
 .direnv
 

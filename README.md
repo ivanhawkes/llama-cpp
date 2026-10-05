@@ -1,12 +1,12 @@
-# llama-cpp flake
+# llama-cpp devenv
 
 Dev shell + one-command GPU inference server for llama.cpp (Qwen3 27B on an RTX 5060 Ti).
-This is **not** a NixOS system configuration — the flake exposes only `devShells`.
+This is **not** a NixOS system configuration — it is a devenv project exposing only a dev shell.
 
 ## Quick start
 
 ```sh
-nix develop        # or just cd here with direnv; .envrc runs `use flake . --impure`
+devenv shell       # or just cd here with direnv; .envrc runs `use devenv`
 run-server         # starts llama-server on 0.0.0.0:8080 (Qwen3.8-27B IQ3_S, all layers on GPU)
 smoke-test         # starts run-server, polls /health up to 300s, then kills it; exit 0 = healthy
 ```
@@ -22,8 +22,9 @@ with `LLAMA_SERVER_LOG`) while echoing to the terminal, and serves Prometheus me
 
 | Path | Purpose |
 |---|---|
-| `flake.nix` | devShell + `run-server` / `smoke-test` scripts |
-| `.envrc` | direnv hook (`use flake . --impure`) |
+| `devenv.nix` | devShell + `run-server` / `smoke-test` / `playwright-mcp` scripts |
+| `.envrc` | direnv hook (`use devenv`) |
+| `.pi/mcp.json` | pi MCP config: `web` server (Playwright, headless Chromium) |
 | `hardware.json` | fastfetch hardware snapshot (field definitions below) |
 | `.pi/` | pi agent skills/agents/npm packages for this workspace |
 | `result` | symlink to the last built devShell (gitignored) |
@@ -43,8 +44,8 @@ If the index mapping ever changes, `run-server` fails fast with a clear message 
 
 - Model: `ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S` (~15GB), pulled from Hugging Face on first start.
 - Cache: `.hf-cache/` in the repo root (gitignored). `HF_HOME` is exported by the devShell
-  shellHook as `$PWD/.hf-cache` (expanded at shell start — a flake-level `env` value would stay
-  literal, since Nix does not expand `$PWD`).
+  `enterShell` hook as `$PWD/.hf-cache` (expanded at shell start — a devenv-level `env` value
+  would stay literal, since Nix does not expand `$PWD`).
 
 ## hardware.json field definitions
 
@@ -63,8 +64,8 @@ which the fields below include). Do not hand-edit; regenerate when stale
   guard in `run-server` catches this before startup.
 - First `run-server` start downloads the model; expect a long pause before `/health` responds
   (smoke-test timeout is 300 s by default).
-- Nix `''` strings interpolate `${...}` — shell scripts embedded in `flake.nix` must avoid brace
-  expansion (see the comment in the flake).
+- Nix `''` strings interpolate `${...}` — shell scripts embedded in `devenv.nix` must avoid
+  unescaped brace expansion; write `\${...}` where a literal shell variable is intended.
 
 ## Reproducing a startup failure
 
@@ -72,7 +73,7 @@ If `smoke-test` (or a manual `run-server`) never reaches `/health`:
 
 1. Read `/tmp/llama-smoke-test.log` — it contains the full `run-server` output, including
    the preflight GPU check and the model-load error.
-2. Check contention before blaming the flake:
+2. Check contention before blaming the devenv config:
    - **Port** — `curl -s localhost:8080/health`: if something already answers, a second
      server cannot bind 8080 (use `SMOKE_TEST_PORT=<other>` for smoke-test; it now sets both
      the bind port and the polled URL).
@@ -91,6 +92,19 @@ happened, resolution/workaround.
 
 <!-- agent notes appended below -->
 
+- 2026-10-05 — Fixed remaining README references to the old flake setup (title, quick start,
+  pitfalls) per user request; replaced with devenv equivalents. Dropped the dangling
+  "(see the comment in the flake)" pointer — no such comment exists in `devenv.nix`.
+  Dated notes quoting the old state left unchanged.
+- 2026-10-05 — Added high-grade web tooling for the pi harness: Playwright MCP pinned in
+  `devenv.nix` (`pkgs.playwright-mcp` + `pkgs.chromium`, bridged by a `playwright-mcp`
+  wrapper script because mcp.json does not expand `${VAR}` in `args`) and registered as
+  server `web` in project-level `.pi/mcp.json`. Verified: `pi mcp list` shows 24 tools;
+  a `browser_navigate` smoke test loaded example.com headless. Runtime page snapshots
+  land in `.playwright-mcp/` (gitignored).
+- 2026-10-05 — Ambiguity: the repo layout table referenced `flake.nix` and `.envrc`
+  running `use flake . --impure`, but this is a devenv project (`devenv.nix`,
+  `.envrc` runs `use devenv`; no flake.nix exists). Corrected both rows.
 - 2026-10-05 — `hardware.json` was missing from disk (gitignored; untracked since b73103a)
   although AGENTS.md treats it as the authoritative hardware spec. Regenerated it.
 - 2026-10-05 — Tool deviation: the README's documented command
