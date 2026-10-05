@@ -92,6 +92,27 @@ happened, resolution/workaround.
 
 <!-- agent notes appended below -->
 
+- 2026-10-05 — Removed from `enterShell`: the `npm install -g pi-harness` hook and
+  the `NPM_CONFIG_PREFIX="$PWD/.pi/npm"` + PATH isolation block (both carried over
+  verbatim from the old flake). Safe because: nothing references the `pi-harness`
+  binary (no skills, `.pi/settings.json`, or `.pi/mcp.json` entry); pi's own package
+  manager installs project-scoped npm packages with an explicit `--prefix .pi/npm`
+  (verified in the built `package-manager.js`), so it does not read
+  NPM_CONFIG_PREFIX; and the harness itself now comes from nix (`pi-coding-agent`).
+  Trade-off: a manual `npm install -g <pkg>` inside the dev shell now fails with
+  EACCES (nixpkgs nodejs global prefix is a read-only store path) unless a prefix
+  is set — that was the block's original purpose. The leftover
+  `.pi/npm/{bin,lib}` NPM_CONFIG_PREFIX layout (incl. the installed
+  `pi-harness`) was deleted afterwards; pi's own extension tree in
+  `.pi/npm/node_modules` is untouched.
+- 2026-10-05 — Ambiguity: "the Pi harness" could mean the npm package `pi-harness`
+  (already installed under `.pi/npm/lib/node_modules`, a zosma HTTP/SSE server wrapper)
+  or the pi coding agent CLI itself. Resolved via the user's hint "1.0 from nix
+  unstable": nixpkgs unstable's `pi-coding-agent` is exactly v1.0.0 and its
+  `mainProgram` is `pi`. Root cause of it being "missing": `devenv.nix` never added
+  a package providing `pi`; the `enterShell` hook's `npm install -g pi-harness`
+  installs the other (server) package, not the CLI. Fix: added
+  `cudaPkgs.pi-coding-agent` to `packages`. Verified: `pi --version` → 1.0.0.
 - 2026-10-05 — Per user request, added a Project purpose section at the top of
   AGENTS.md: this devenv project runs the LLM model serving the pi agent.
 - 2026-10-05 — Fixed remaining README references to the old flake setup (title, quick start,

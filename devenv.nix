@@ -137,6 +137,8 @@ in
     runServer
     smokeTest
     playwrightMcp
+    # Pi harness (pi coding agent CLI, v1.0 in nixos-unstable)
+    cudaPkgs.pi-coding-agent
     cudaPkgs.linuxPackages.nvidia_x11.open
   ];
 
@@ -150,16 +152,6 @@ in
 
     # Deterministic Hugging Face model cache isolation
     export HF_HOME="$PWD/.hf-cache"
-
-    # Isolate npm paths to prevent NixOS global write permission issues
-    export NPM_CONFIG_PREFIX="$PWD/.pi/npm"
-    export PATH="$PWD/.pi/npm/bin:$PATH"
-
-    # Automated initialization step for pi harness infrastructure 
-    if command -v npm >/dev/null 2>&1; then
-      echo "📦 Checking pi-harness global dependencies..."
-      npm install -g pi-harness 2>/dev/null || echo "⚠️  Could not run network setup for pi-harness."
-    fi
 
     echo "⚡ Pi Configuration Workspace Loaded!"
     echo "👉 Agent harness skills are preinstalled (.pi/npm); just start 'pi'."
