@@ -140,11 +140,19 @@ in
     # Pi harness (pi coding agent CLI, v1.0 in nixos-unstable)
     cudaPkgs.pi-coding-agent
     cudaPkgs.linuxPackages.nvidia_x11.open
+    # Wayland clipboard tools (wl-copy/wl-paste) so pi's TUI can copy/paste
+    cudaPkgs.wl-clipboard
   ];
 
-  # 3. Environment Variables
-  env.TMPDIR = "/tmp";
-
+   # 3. Environment Variables (Add the Wayland passthrough here)
+  env = {
+    TMPDIR = "/tmp";
+    
+    # 🚀 FIX: Pass through Wayland & Noctalia/Niri environment contexts
+    WAYLAND_DISPLAY = "wayland-1"; 
+    DISPLAY = ":0"; # Fallback for XWayland bridges inside the shell
+  };
+  
   # 4. Interactive Shell Initialisation & Hooks
   enterShell = ''
     # Automatically localise Git LFS constraints
