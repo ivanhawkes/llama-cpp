@@ -92,6 +92,8 @@ happened, resolution/workaround.
 
 <!-- agent notes appended below -->
 
+- 2026-10-05 — Per user request, added a Project purpose section at the top of
+  AGENTS.md: this devenv project runs the LLM model serving the pi agent.
 - 2026-10-05 — Fixed remaining README references to the old flake setup (title, quick start,
   pitfalls) per user request; replaced with devenv equivalents. Dropped the dangling
   "(see the comment in the flake)" pointer — no such comment exists in `devenv.nix`.

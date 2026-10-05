@@ -1,5 +1,11 @@
 # Project instructions for agents
 
+## Project purpose
+
+This is a devenv project used to run the LLM model you are speaking with — the
+dev shell provides the local GPU inference server (llama.cpp) that serves this
+very agent.
+
 ## Performance metrics
 
 When I ask for performance metrics you will summarise the prometheus metrics mentioned in README.md.
