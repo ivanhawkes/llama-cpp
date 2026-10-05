@@ -1,0 +1,6 @@
+inputs:
+  nixpkgs:
+    url: github:nixos/nixpkgs/nixos-unstable
+
+# Native devenv top-level flag to bypass unfree evaluation checks
+allow_unfree: true
