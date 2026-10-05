@@ -1,12 +1,16 @@
 {
-  description = "Llama.cpp development environment";
+  description = "Llama.cpp development environment with automated devenv tools";
+
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    devenv.url = "github:cachix/devenv";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, devenv, ... } @ inputs:
     let
       system = "x86_64-linux";
+      
+      # Configure nixpkgs matching your hardware acceleration requirements
       pkgs = import nixpkgs {
         inherit system;
         config = {
@@ -16,20 +20,13 @@
       };
 
       # llama.cpp with CUDA support explicitly enabled via override
-      # (redundant with the pkgs config above, but keeps run-server self-documenting)
       llamaCppPackage = pkgs.llama-cpp.override { cudaSupport = true; };
 
+      # Native local GPU inference wrapper
       runServer = pkgs.writeShellScriptBin "run-server" ''
         echo "🤖 Launching local GPU inference engine (Coding Optimization)..."
-
-        # Setting CUDA_DEVICE_ORDER=PCI_BUS_ID forces the CUDA runtime to assign its indices matching the 
-        # physical PCIe bus order rather than performance metrics. 
         export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
-        # Preflight: verify physical GPU index 0 is actually the RTX 5060 Ti.
-        # llama.cpp loads onto device 0 first, and the model (~15GB) does not fit on
-        # the RTX 4060 (8GB), so a stale index mapping would fail obscurely at
-        # model-load time. (No CUDA_VISIBLE_DEVICES pin — see AGENTS.md.)
         if command -v nvidia-smi > /dev/null 2>&1; then
           GPU0=$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader -i 0 | head -1)
           case "$GPU0" in
@@ -39,8 +36,6 @@
                exit 1 ;;
           esac
 
-          # Preflight: enough free VRAM on index 0 for the ~12GB model + KV cache.
-          # A second instance while another server runs would OOM obscurely at load time.
           GPU_FREE=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader -i 0 | awk '{print $1}')
           if [ "$GPU_FREE" -lt 12000 ]; then
             echo "❌ Only $GPU_FREE MiB free on CUDA index 0; need >= 12000 MiB for the model." >&2
@@ -49,23 +44,13 @@
           fi
         fi
 
-        # NOTE: The model we are running 'ISTA-DASLab/Qwen3.8-27B-GSQ-RCO-GGUF:IQ3_S' is an MTP model
-        # and the version of llama.cpp we are using can split MTP across multiple GPU devices.
-
-        # NixOS system driver first; nvidia_x11.open (in buildInputs) is the
-        # fallback for non-NixOS use where /run/opengl-driver does not exist.
         export LD_LIBRARY_PATH="/run/opengl-driver/lib:/run/opengl-driver-32/lib:$LD_LIBRARY_PATH"
         
-        # Let's see that version number.
         echo Llama.cpp version number:
         echo ${llamaCppPackage}/bin/llama-server
 
-        # Log the whole session to $LOG (fresh per start) while echoing to the
-        # terminal, so output stays viewable and can be monitored after the fact.
         LOG=/tmp/llama-server.log
         [ -n "$LLAMA_SERVER_LOG" ] && LOG=$LLAMA_SERVER_LOG
-        # The UTC start marker is emitted inside the pipeline so it lands in
-        # $LOG as well (a bare echo would go only to the terminal).
         { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] run-server: session log -> $LOG"; \
           ${llamaCppPackage}/bin/llama-server \
             --log-timestamps \
@@ -74,7 +59,7 @@
             -ngl 99 \
             -ctk q4_0 \
             -ctv q4_0 \
-            -c 65536 \
+            -c 90000 \
             --image-min-tokens 1024 \
             --flash-attn on \
             -ts 2,1 \
@@ -90,10 +75,7 @@
             --chat-template-kwargs '{"reasoning_effort":"xhigh"}' "$@" 2>&1; } | tee "$LOG"
       '';
 
-      # Smoke test: start run-server, poll /health until healthy (or timeout),
-      # then kill the server. Fails fast with the last log lines on early death.
-      # NOTE: bash ${var} brace-expansion is not usable inside Nix '' strings
-      # (it triggers Nix interpolation), so the script avoids braces entirely.
+      # Pre-flight smoke validation runner
       smokeTest = pkgs.writeShellScriptBin "smoke-test" ''
         PORT=$SMOKE_TEST_PORT
         [ -z "$PORT" ] && PORT=8080
@@ -101,15 +83,9 @@
         [ -z "$TIMEOUT" ] && TIMEOUT=300
         LOG=/tmp/llama-smoke-test.log
 
-        # Pass the port through so SMOKE_TEST_PORT controls both the server's bind
-        # port and the polled URL (run-server forwards "$@" to llama-server).
         run-server --port "$PORT" > "$LOG" 2>&1 &
         PID=$!
 
-        # Kill the wrapper's direct children (llama-server + tee) before the
-        # wrapper itself, so no orphaned llama-server keeps holding VRAM.
-        # Scoped to $PID's children only — never a blanket pkill -f, which could
-        # hit an unrelated server. (Killing $PID alone orphans the pipeline.)
         cleanup() {
           pkill -P $PID 2>/dev/null
           kill $PID 2>/dev/null
@@ -136,45 +112,70 @@
       '';
 
     in {
-      devShells.${system}.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          git
-          git-lfs
-          nodejs_latest
-          pi-coding-agent
-          go
-          python3
-          fastfetch
-          curl
-          runServer
-          smokeTest
-          # Open NVIDIA driver libs (libcuda & co) so the shell also works
-          # outside NixOS, where /run/opengl-driver does not exist. On NixOS
-          # the system driver still takes precedence: run-server lists the
-          # /run/opengl-driver paths first in LD_LIBRARY_PATH.
-          linuxPackages.nvidia_x11.open
+      devShells.${system}.default = devenv.lib.mkShell {
+        inherit inputs pkgs;
+        modules = [
+          ({ pkgs, ... }: {
+            
+            # 1. Automated Devenv Runtimes & Languages
+            languages = {
+              javascript = {
+                enable = true;
+                package = pkgs.nodejs_24;
+              };
+              python = {
+                enable = true;
+                package = pkgs.python3;
+              };
+              go = {
+                enable = true;
+                package = pkgs.go;
+              };
+            };
+
+            # 2. System Packages & Git Tooling
+            packages = [
+              pkgs.fastfetch
+              pkgs.curl
+              pkgs.git
+              pkgs.git-lfs
+              pkgs.gh         # Git CLI GitHub utility
+              runServer
+              smokeTest
+              pkgs.linuxPackages.nvidia_x11.open # Preserved non-NixOS driver layer fallback
+            ];
+
+            # 3. Environment Variables Configuration
+            env = {
+              TMPDIR = "/tmp";
+            };
+
+            # 4. Interactive Shell Initialisation & Hooks
+            enterShell = ''
+              # Automatically localise Git LFS constraints
+              git lfs install --local 2>/dev/null || true
+
+              # Deterministic Hugging Face model cache isolation
+              export HF_HOME="$PWD/.hf-cache"
+
+              # Isolate npm paths to prevent NixOS global write permission issues
+              export NPM_CONFIG_PREFIX="$PWD/.pi/npm"
+              export PATH="$PWD/.pi/npm/bin:$PATH"
+
+              # Automated initialization step for pi harness infrastructure 
+              if command -v npm >/dev/null 2>&1; then
+                echo "📦 Checking pi-harness global dependencies..."
+                npm install -g pi-harness 2>/dev/null || echo "⚠️  Could not run network setup for pi-harness."
+              fi
+
+              echo "⚡ Pi Configuration Workspace Loaded!"
+              echo "👉 Agent harness skills are preinstalled (.pi/npm); just start 'pi'."
+              echo "⚡ Llama.cpp NixOS environment loaded!"
+              echo "💡 Type 'run-server' to instantly start your engine via native CUDA acceleration."
+              echo "🚀 Devenv active: Node.js 24, Python 3, Go, and Git tools are ready."
+            '';
+          })
         ];
-        
-        env = {
-          TMPDIR = "/tmp";
-        };
-
-        shellHook = ''
-          # Deterministic Hugging Face model cache for this workspace
-          # (run-server inherits it; ~15GB model lands here on first start).
-          # Must be exported in the shell, not via `env`: Nix does not expand
-          # $PWD, so a flake-level value would be the literal string "$PWD/.hf-cache".
-          export HF_HOME="$PWD/.hf-cache"
-
-          # Isolate npm paths to prevent NixOS global write permission issues
-          export NPM_CONFIG_PREFIX="$PWD/.pi/npm"
-          export PATH="$PWD/.pi/npm/bin:$PATH"
-          
-          echo "⚡ Pi Configuration Workspace Loaded!"
-          echo "👉 Agent harness skills are preinstalled (.pi/npm); just start 'pi'."
-          echo "⚡ Llama.cpp NixOS environment loaded!"
-          echo "💡 Type 'run-server' to instantly start your engine via native CUDA acceleration."
-        '';
       };
     };
 }
