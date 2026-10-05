@@ -143,5 +143,13 @@ scripts. Entries are short and factual: date, context, what happened, resolution
   that stale notes were already dropped, so nothing to remove.
 - 2026-10-05 — `du -h` on the symlinked GGUF files in `.hf-cache/` reported 4K (the size of the
   symlink itself); used `du -Lh` to get the real blob sizes (~12 GiB model, ~890 MB mmproj).
+- 2026-10-05 — AGENTS.md rewrite: "remove logs of previous changes" was ambiguous about which
+  lines were logs vs. standing instructions. Resolved by treating dated provenance ("user
+  instruction, 2026-10-03") and the completed cleanup clause ("remove any reference that claims
+  one exists", done in commit b59f0fd) as logs to drop, while keeping the standing no-GPU-pin
+  constraint.
+- 2026-10-05 — "commit+push" was ambiguous with two dirty units in the tree (AGENTS.md
+  rewrite + its note, and the new clarify-doc skill). Resolved by making one commit per
+  logical unit, then pushing both.
 
 <!-- agent notes appended below -->

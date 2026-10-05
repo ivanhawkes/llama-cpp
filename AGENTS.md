@@ -1,42 +1,54 @@
 # Project instructions for agents
 
-## Project purpose
+## Purpose
 
-This is a devenv project used to run the LLM model you are speaking with — the
-dev shell provides the local GPU inference server (llama.cpp) that serves this
-very agent.
+This repo is a devenv project (not a NixOS configuration). Its dev shell provides a local
+GPU inference server — llama.cpp serving Qwen3.8-27B (IQ3_S GGUF) on 127.0.0.1:8080 — which
+serves the pi agent in this repo. `README.md` is the primary documentation; read it before
+working here (server flags, GPU facts, model/cache layout, pitfalls).
+
+## Starting and checking the server
+
+- `run-server` starts `llama-server` on 127.0.0.1:8080; extra arguments pass through to
+  `llama-server`. Output is teed to `/tmp/llama-server.log` (override with `LLAMA_SERVER_LOG`).
+- `smoke-test` starts the server, polls `/health` for up to 300 s, then kills it; exit 0 =
+  healthy. Full output: `/tmp/llama-smoke-test.log`.
+- First start downloads the model (~12 GiB) into `.hf-cache/`; expect a long pause before
+  `/health` responds.
+- The running server on :8080 serves this agent; killing it ends the current session.
 
 ## Performance metrics
 
-When I ask for performance metrics you will summarise the prometheus metrics mentioned in README.md.
+When asked for performance metrics, fetch `http://127.0.0.1:8080/metrics` (the server's
+Prometheus endpoint, enabled by `--metrics`) and summarise it.
 
 ## Execution hardware
 
-The LLM that this pi harness talks to runs on the machine documented in `hardware.json`
-(fastfetch JSON output). That file is the authoritative specification of the hardware this
-agent executes on — read it when you need exact specs.
+`hardware.json` is a fastfetch snapshot of this machine (gitignored; regenerate with
+`fastfetch -c all --format json > hardware.json` when stale). It documents CPU, RAM, disk,
+and GPU models, but its GPU entries carry no CUDA index. For live GPU identity and index
+mapping, `nvidia-smi` is the source of truth.
 
-## GPU pinning
+## GPU ordering
 
-Do **not** pin the GPU with `CUDA_VISIBLE_DEVICES` in this project (user instruction,
-2026-10-03 — it is a mistake here). The preflight guard in `run-server` (CUDA index 0 must
-be the RTX 5060 Ti) is the only GPU-ordering contract. Do not propose adding a pin as an
-"improvement", and remove any reference that claims one exists.
+Do not pin the GPU with `CUDA_VISIBLE_DEVICES` in this project, and do not propose adding a
+pin as an "improvement". Ordering is established by `CUDA_DEVICE_ORDER=PCI_BUS_ID` (exported
+by `run-server`) so CUDA indices follow PCI bus order, matching `nvidia-smi`. The preflight
+guard in `run-server` verifies the mapping: CUDA index 0 must be the RTX 5060 Ti with
+≥ 12000 MiB free, otherwise it exits before startup.
 
 ## Documentation requirements
 
-While working in this repo, you must record the following in `README.md`, under the
-**Agent notes** section (create it if missing):
+While working in this repo, record the following in the **Agent notes** section of
+`README.md` (create it if missing). Keep entries short and factual: date, context, what
+happened, resolution/workaround. Do not silently work around these issues — the note is part
+of the task.
 
-1. **Ambiguities** — any ambiguity encountered whilst performing a task: unclear or
-   conflicting requirements, multiple plausible interpretations, missing information.
-   Record what was ambiguous, how you resolved it, and why.
-2. **Tool deviations** — any deviation from expected tool behaviour: commands that behave
-   differently than documented, unexpected output, silent failures, version-specific quirks.
-   Record the tool/command, expected vs. actual behaviour, and the workaround used.
-3. **Shell script issues** — any issue found when writing or running shell scripts, e.g.
-   unexpected syntax errors, quoting pitfalls, Nix `''` string interpolation surprises.
-   Record the symptom, root cause, and fix.
-
-Keep entries short and factual: date, context, what happened, resolution/workaround.
-Do not silently work around these issues — the note is part of the task.
+1. **Ambiguities** — unclear or conflicting requirements, multiple plausible
+   interpretations, missing information. Record what was ambiguous, how you resolved it,
+   and why.
+2. **Tool deviations** — commands that behave differently than documented, unexpected
+   output, silent failures, version-specific quirks. Record the tool/command, expected vs.
+   actual behaviour, and the workaround used.
+3. **Shell script issues** — syntax errors, quoting pitfalls, Nix `''` interpolation
+   surprises. Record the symptom, root cause, and fix.
