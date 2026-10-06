@@ -7,21 +7,12 @@
 }:
 
 let
-  # 🚀 FIX: Forcibly re-import Nixpkgs with CUDA and unfree support enabled globally
-  # This ensures both llama-cpp and nvidia_x11 see the active hardware state.
-  cudaPkgs = import inputs.nixpkgs {
-    inherit (pkgs) system;
-    config = {
-      allowUnfree = true;
-      cudaSupport = true;
-    };
-  };
-
-  # Explicitly override llama-cpp using our hardware-accelerated package tree
-  llamaCppPackage = cudaPkgs.llama-cpp.override { cudaSupport = true; };
+  # CUDA build of llama-cpp. The explicit override is what enables CUDA;
+  # the top-level pkgs already has allowUnfree set by devenv (devenv.yaml).
+  llamaCppPackage = pkgs.llama-cpp.override { cudaSupport = true; };
 
   # Native local GPU inference wrapper
-  runServer = cudaPkgs.writeShellScriptBin "hack" ''
+  runServer = pkgs.writeShellScriptBin "hack" ''
     echo "🤖 Launching local GPU inference engine (Coding Optimization)..."
     export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
@@ -76,14 +67,14 @@ let
   # Headless browser MCP server for the pi harness (see .pi/mcp.json).
   # Pinned by Nix so the harness's web tooling is reproducible. The wrapper
   # bridges the store paths because mcp.json does not expand ${VAR} in args.
-  playwrightMcp = cudaPkgs.writeShellScriptBin "playwright-mcp" ''
-    exec ${cudaPkgs.playwright-mcp}/bin/playwright-mcp \
+  playwrightMcp = pkgs.writeShellScriptBin "playwright-mcp" ''
+    exec ${pkgs.playwright-mcp}/bin/playwright-mcp \
       --headless \
-      --executable-path ${cudaPkgs.chromium}/bin/chromium "$@"
+      --executable-path ${pkgs.chromium}/bin/chromium "$@"
   '';
 
   # Pre-flight smoke validation runner
-  smokeTest = cudaPkgs.writeShellScriptBin "smoke-test" ''
+  smokeTest = pkgs.writeShellScriptBin "smoke-test" ''
     PORT=$SMOKE_TEST_PORT
     [ -z "$PORT" ] && PORT=8080
     TIMEOUT=$SMOKE_TEST_TIMEOUT
@@ -122,13 +113,13 @@ in
   # Node JS
   languages.javascript = {
     enable = true;
-    package = cudaPkgs.nodejs_24;
+    package = pkgs.nodejs_24;
   };
   
   # Python
   languages.python = {
     enable = true;
-    package = cudaPkgs.python3;
+    package = pkgs.python3;
     venv = {
       enable = true;
       quiet = true;
@@ -138,33 +129,32 @@ in
   # Go
   languages.go = {
     enable = true;
-    package = cudaPkgs.go;
+    package = pkgs.go;
   };
 
   # 2. System Packages & Git Tooling
   packages = [
-    # Why aren't these using the cudaPkgs prefix, but the rest are?
     runServer
     smokeTest
     playwrightMcp
 
-    cudaPkgs.fastfetch
-    cudaPkgs.curl
-    cudaPkgs.git
-    cudaPkgs.git-lfs
-    cudaPkgs.gh
+    pkgs.fastfetch
+    pkgs.curl
+    pkgs.git
+    pkgs.git-lfs
+    pkgs.gh
 
     # CUDA needed for some build processes.
-    cudaPkgs.cudaPackages.cuda_nvcc
-    cudaPkgs.cudaPackages.cudatoolkit
-    cudaPkgs.cudaPackages.backendStdenv
+    pkgs.cudaPackages.cuda_nvcc
+    pkgs.cudaPackages.cudatoolkit
+    pkgs.cudaPackages.backendStdenv
 
     # Pi harness (pi coding agent CLI, v1.0 in nixos-unstable)
-    cudaPkgs.pi-coding-agent
-    cudaPkgs.linuxPackages.nvidia_x11.open
-    
+    pkgs.pi-coding-agent
+    pkgs.linuxPackages.nvidia_x11.open
+
     # Wayland clipboard copy and paste at the command line.
-    cudaPkgs.wl-clipboard
+    pkgs.wl-clipboard
   ];
 
   # Environment Variables (Add the Wayland passthrough here)
