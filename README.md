@@ -152,4 +152,12 @@ scripts. Entries are short and factual: date, context, what happened, resolution
   rewrite + its note, and the new clarify-doc skill). Resolved by making one commit per
   logical unit, then pushing both.
 
+- 2026-10-05 — Determined which `devenv.nix` packages need the `cudaPkgs` prefix: none. Verified
+  against the locked nixpkgs rev (a7868a7) that `pkgs.llama-cpp.override { cudaSupport = true; }`
+  and `cudaPkgs.llama-cpp.override { cudaSupport = true; }` produce identical derivations — the
+  explicit override makes `config.cudaSupport` irrelevant, and `cudaPackages` is always injected
+  by `callPackage` from the top-level scope. Tool deviation: `nix eval` reported "does not provide
+  attribute" for `.drvName`/`.drvPath` because modern nixpkgs no longer expose those passthru
+  attributes; compared derivations with `==` instead.
+
 <!-- agent notes appended below -->
