@@ -33,7 +33,7 @@ This skill must never overflow the context window. Enforce:
 
    **GPU ordering/indexing:** fastfetch's GPU list order is arbitrary — never use `hardware.json` to decide CUDA indices. For any GPU order or index-mapping decision, `nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader` is the single source of truth. Never propose `CUDA_VISIBLE_DEVICES` pinning in this repo (standing rule — see AGENTS.md).
 
-2. **Read `flake.nix`** (small file — fine to read in full). This repo is a devShell + `run-server` flake for llama.cpp inference, *not* a NixOS system configuration. Only suggest `nixos-rebuild`/`nixos-test`-style changes if the flake actually exposes `nixosConfigurations`.
+2. **Read `flake.nix`** (small file — fine to read in full). This repo is a devShell + `hack` flake for llama.cpp inference, *not* a NixOS system configuration. Only suggest `nixos-rebuild`/`nixos-test`-style changes if the flake actually exposes `nixosConfigurations`.
 
 That's it for the scan. No nix commands yet.
 
@@ -84,7 +84,7 @@ Rules:
 
 1. **Project (flake / dev environment)** — VRAM vs model size (no `CUDA_VISIBLE_DEVICES` pinning — see AGENTS.md), HF cache location (`HF_HOME`), driver libs on `LD_LIBRARY_PATH`, flake structure, reproducibility, `nix flake check`.
 2. **LLM ability to write code** — clearer module boundaries, typed/validated Nix expressions, consistent naming conventions, examples that make generated code easier to verify.
-3. **LLM ability to debug** — better error messages, reproducible failure steps (e.g. how to reproduce a `run-server` startup failure), documented known pitfalls.
+3. **LLM ability to debug** — better error messages, reproducible failure steps (e.g. how to reproduce a `hack` startup failure), documented known pitfalls.
 4. **LLM ability to test** — smoke tests for the actual entry points (e.g. start `llama-server`, curl `/health`), unit tests for Nix modules, a documented way to run them.
 5. **LLM ability to document code, documentation, and data definitions** — per-module doc comments, a README explaining repo layout, field definitions for data files like `hardware.json`.
 
@@ -103,7 +103,7 @@ Keep it concrete and short. No generic NixOS advice that doesn't apply to this r
 ## Guardrails
 
 - Never propose or add `CUDA_VISIBLE_DEVICES` pinning in this repo (standing rule — see
-  AGENTS.md). The preflight guard in `run-server` (index 0 must be the RTX 5060 Ti) is the
+  AGENTS.md). The preflight guard in `hack` (index 0 must be the RTX 5060 Ti) is the
   only GPU-ordering contract; treat any reference claiming a pin exists as a bug to remove.
 - Don't hand-edit `hardware.json`; regenerate it with `fastfetch -c all --format json > hardware.json` instead.
 - Prefer user-level changes in the flake/devShell over system-level (root) changes.

@@ -9,12 +9,12 @@ serving the pi agent in this repo.
 
 ```sh
 devenv shell       # or just cd here; .envrc runs `use devenv` under direnv
-run-server         # starts llama-server on 127.0.0.1:8080
-smoke-test         # starts run-server, polls /health up to 300 s, then kills it; exit 0 = healthy
+hack         # starts llama-server on 127.0.0.1:8080
+smoke-test         # starts hack, polls /health up to 300 s, then kills it; exit 0 = healthy
 ```
 
-- `run-server` tees all server output to `/tmp/llama-server.log` (truncated per start; override
-  with `LLAMA_SERVER_LOG`). Extra arguments pass through to `llama-server` (e.g. `run-server --port 8081`).
+- `hack` tees all server output to `/tmp/llama-server.log` (truncated per start; override
+  with `LLAMA_SERVER_LOG`). Extra arguments pass through to `llama-server` (e.g. `hack --port 8081`).
 - Prometheus metrics: `http://127.0.0.1:<port>/metrics` (default port 8080).
 - `smoke-test` honors `SMOKE_TEST_PORT` (default 8080) and `SMOKE_TEST_TIMEOUT` (default 300 s); it
   sets both the bind port and the polled URL. Full server output during the test:
@@ -22,7 +22,7 @@ smoke-test         # starts run-server, polls /health up to 300 s, then kills it
 
 ## Server configuration
 
-`run-server` exports `CUDA_DEVICE_ORDER=PCI_BUS_ID` so CUDA device indices follow PCI bus order
+`hack` exports `CUDA_DEVICE_ORDER=PCI_BUS_ID` so CUDA device indices follow PCI bus order
 (matching `nvidia-smi`'s default ordering), then runs `llama-server` with:
 
 | Flag | Effect |
@@ -52,7 +52,7 @@ nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader
 # 1, NVIDIA GeForce RTX 4060, 8188 MiB
 ```
 
-Preflight (in `run-server`, before startup): CUDA index 0 must be the RTX 5060 Ti and have
+Preflight (in `hack`, before startup): CUDA index 0 must be the RTX 5060 Ti and have
 ≥ 12000 MiB free, otherwise it exits with a message. If the index mapping ever changes, this
 guard fails fast — with the mapping reversed, the 2/3 tensor-split share would land on the
 8 GB card and OOM.
@@ -74,7 +74,7 @@ caps at Gen4.
 
 | Path | Purpose |
 |---|---|
-| `devenv.nix` | devShell packages/env + `run-server`, `smoke-test`, `playwright-mcp` scripts |
+| `devenv.nix` | devShell packages/env + `hack`, `smoke-test`, `playwright-mcp` scripts |
 | `.envrc` | direnv hook (`use devenv`) |
 | `devenv.yaml` | inputs (nixpkgs = nixos-unstable) + `allow_unfree: true` |
 | `AGENTS.md` | project instructions for agents working in this repo |
@@ -107,8 +107,8 @@ older than 7 days). Fields this repo's decisions rely on:
 ## Known pitfalls
 
 - Picking the wrong GPU index puts most of the model on the 8 GB card → OOM/crash. The preflight
-  guard in `run-server` catches this before startup.
-- First `run-server` start downloads the model (~12 GiB); expect a long pause before `/health`
+  guard in `hack` catches this before startup.
+- First `hack` start downloads the model (~12 GiB); expect a long pause before `/health`
   responds (smoke-test timeout is 300 s by default).
 - In `devenv.nix`, `${...}` inside `''` strings is interpolated by Nix. Escape as `\${...}` where a
   literal shell variable is intended.
@@ -117,9 +117,9 @@ older than 7 days). Fields this repo's decisions rely on:
 
 ## Reproducing a startup failure
 
-If `smoke-test` (or a manual `run-server`) never reaches `/health`:
+If `smoke-test` (or a manual `hack`) never reaches `/health`:
 
-1. Read `/tmp/llama-smoke-test.log` — it contains the full `run-server` output, including the
+1. Read `/tmp/llama-smoke-test.log` — it contains the full `hack` output, including the
    preflight GPU check and the model-load error.
 2. Check contention before blaming the devenv config:
    - **Port** — `curl -s localhost:8080/health`: if something already answers, a second server cannot

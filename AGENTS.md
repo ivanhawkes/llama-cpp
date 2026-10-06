@@ -9,7 +9,7 @@ working here (server flags, GPU facts, model/cache layout, pitfalls).
 
 ## Starting and checking the server
 
-- `run-server` starts `llama-server` on 127.0.0.1:8080; extra arguments pass through to
+- `hack` starts `llama-server` on 127.0.0.1:8080; extra arguments pass through to
   `llama-server`. Output is teed to `/tmp/llama-server.log` (override with `LLAMA_SERVER_LOG`).
 - `smoke-test` starts the server, polls `/health` for up to 300 s, then kills it; exit 0 =
   healthy. Full output: `/tmp/llama-smoke-test.log`.
@@ -33,8 +33,8 @@ mapping, `nvidia-smi` is the source of truth.
 
 Do not pin the GPU with `CUDA_VISIBLE_DEVICES` in this project, and do not propose adding a
 pin as an "improvement". Ordering is established by `CUDA_DEVICE_ORDER=PCI_BUS_ID` (exported
-by `run-server`) so CUDA indices follow PCI bus order, matching `nvidia-smi`. The preflight
-guard in `run-server` verifies the mapping: CUDA index 0 must be the RTX 5060 Ti with
+by `hack`) so CUDA indices follow PCI bus order, matching `nvidia-smi`. The preflight
+guard in `hack` verifies the mapping: CUDA index 0 must be the RTX 5060 Ti with
 ≥ 12000 MiB free, otherwise it exits before startup.
 
 ## Documentation requirements

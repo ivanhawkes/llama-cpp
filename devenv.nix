@@ -1,7 +1,13 @@
-{ pkgs, lib, config, inputs, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  inputs,
+  ...
+}:
 
 let
-  # 🚀 FIX: Forcibly re-import Nixpkgs with CUDA and unfree support enabled globally 
+  # 🚀 FIX: Forcibly re-import Nixpkgs with CUDA and unfree support enabled globally
   # This ensures both llama-cpp and nvidia_x11 see the active hardware state.
   cudaPkgs = import inputs.nixpkgs {
     inherit (pkgs) system;
@@ -15,7 +21,7 @@ let
   llamaCppPackage = cudaPkgs.llama-cpp.override { cudaSupport = true; };
 
   # Native local GPU inference wrapper
-  runServer = cudaPkgs.writeShellScriptBin "run-server" ''
+  runServer = cudaPkgs.writeShellScriptBin "hack" ''
     echo "🤖 Launching local GPU inference engine (Coding Optimization)..."
     export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
@@ -37,13 +43,13 @@ let
     fi
 
     export LD_LIBRARY_PATH="/run/opengl-driver/lib:/run/opengl-driver-32/lib:$LD_LIBRARY_PATH"
-    
+
     echo Llama.cpp version number:
     echo ${llamaCppPackage}/bin/llama-server
 
     LOG=/tmp/llama-server.log
     [ -n "$LLAMA_SERVER_LOG" ] && LOG=$LLAMA_SERVER_LOG
-    { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] run-server: session log -> $LOG"; \
+    { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] hack: session log -> $LOG"; \
       ${llamaCppPackage}/bin/llama-server \
         --log-timestamps \
         --log-prefix \
@@ -84,7 +90,7 @@ let
     [ -z "$TIMEOUT" ] && TIMEOUT=300
     LOG=/tmp/llama-smoke-test.log
 
-    run-server --port "$PORT" > "$LOG" 2>&1 &
+    hack --port "$PORT" > "$LOG" 2>&1 &
     PID=$!
 
     cleanup() {
@@ -144,15 +150,18 @@ in
     cudaPkgs.wl-clipboard
   ];
 
-   # 3. Environment Variables (Add the Wayland passthrough here)
+  # 3. Environment Variables (Add the Wayland passthrough here)
   env = {
     TMPDIR = "/tmp";
-    
+
     # 🚀 FIX: Pass through Wayland & Noctalia/Niri environment contexts
-    WAYLAND_DISPLAY = "wayland-1"; 
+    WAYLAND_DISPLAY = "wayland-1";
     DISPLAY = ":0"; # Fallback for XWayland bridges inside the shell
   };
-  
+
+  # Enable the native delta integration for improved Git diff views.
+  delta.enable = true;
+
   # 4. Interactive Shell Initialisation & Hooks
   enterShell = ''
     # Automatically localise Git LFS constraints
@@ -164,7 +173,7 @@ in
     echo "⚡ Pi Configuration Workspace Loaded!"
     echo "👉 Agent harness skills are preinstalled (.pi/npm); just start 'pi'."
     echo "⚡ Llama.cpp NixOS environment loaded!"
-    echo "💡 Type 'run-server' to instantly start your engine via native CUDA acceleration."
+    echo "💡 Type 'hack' to instantly start your engine via native CUDA acceleration."
     echo "🚀 Devenv active: Node.js 24, Python 3, Go, and Git tools are ready."
   '';
 }
