@@ -119,15 +119,23 @@ let
   '';
 in
 {
-  # 1. Automated Runtimes & Languages (Pulled from our custom CUDA package set)
+  # Node JS
   languages.javascript = {
     enable = true;
     package = cudaPkgs.nodejs_24;
   };
+  
+  # Python
   languages.python = {
     enable = true;
     package = cudaPkgs.python3;
+    venv = {
+      enable = true;
+      quiet = true;
+    };
   };
+
+  # Go
   languages.go = {
     enable = true;
     package = cudaPkgs.go;
@@ -135,34 +143,52 @@ in
 
   # 2. System Packages & Git Tooling
   packages = [
+    # Why aren't these using the cudaPkgs prefix, but the rest are?
+    runServer
+    smokeTest
+    playwrightMcp
+
     cudaPkgs.fastfetch
     cudaPkgs.curl
     cudaPkgs.git
     cudaPkgs.git-lfs
     cudaPkgs.gh
-    runServer
-    smokeTest
-    playwrightMcp
+
+    # CUDA needed for some build processes.
+    cudaPkgs.cudaPackages.cuda_nvcc
+    cudaPkgs.cudaPackages.cudatoolkit
+    cudaPkgs.cudaPackages.backendStdenv
+
     # Pi harness (pi coding agent CLI, v1.0 in nixos-unstable)
     cudaPkgs.pi-coding-agent
     cudaPkgs.linuxPackages.nvidia_x11.open
-    # Wayland clipboard tools (wl-copy/wl-paste) so pi's TUI can copy/paste
+    
+    # Wayland clipboard copy and paste at the command line.
     cudaPkgs.wl-clipboard
   ];
 
-  # 3. Environment Variables (Add the Wayland passthrough here)
+  # Environment Variables (Add the Wayland passthrough here)
   env = {
     TMPDIR = "/tmp";
 
-    # 🚀 FIX: Pass through Wayland & Noctalia/Niri environment contexts
+    # Pass through Wayland & Noctalia / Niri environment contexts/
     WAYLAND_DISPLAY = "wayland-1";
-    DISPLAY = ":0"; # Fallback for XWayland bridges inside the shell
+    
+    # Fallback for XWayland bridges inside the shell
+    DISPLAY = ":0";
+
+    # These are required to build Strata.
+    # CUDA_PATH = "${pkgs.cudaPackages.cudatoolkit}";
+    # CUDA_CACHE_PATH = "$HOME/.nv/ComputeCache";
+    # LD_LIBRARY_PATH = "${pkgs.linuxPackages.nvidia_x11}/lib:${pkgs.cudaPackages.cudatoolkit}/lib:${pkgs.cudaPackages.cudatoolkit}/lib64";
+    
+    # Optimized compilation for the RTX 5060 Ti
+    # CMAKE_ARGS = "-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=120";
   };
 
   # Enable the native delta integration for improved Git diff views.
   delta.enable = true;
 
-  # 4. Interactive Shell Initialisation & Hooks
   enterShell = ''
     # Automatically localise Git LFS constraints
     git lfs install --local 2>/dev/null || true
