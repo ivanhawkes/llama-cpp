@@ -78,7 +78,6 @@ caps at Gen4.
 | `.envrc` | direnv hook (`use devenv`) |
 | `devenv.yaml` | inputs (nixpkgs = nixos-unstable) + `allow_unfree: true` |
 | `AGENTS.md` | project instructions for agents working in this repo |
-| `TODO.md` | task list |
 | `hardware.json` | fastfetch hardware snapshot (gitignored; field definitions below) |
 | `skills-lock.json` | pi skill lockfile; pins the `.agents/skills/` sources (mattpocock/skills) |
 | `.agents/skills/` | canonical project skills: handoff, implement, implement-spec, to-spec, to-tickets |
@@ -159,5 +158,15 @@ scripts. Entries are short and factual: date, context, what happened, resolution
   by `callPackage` from the top-level scope. Tool deviation: `nix eval` reported "does not provide
   attribute" for `.drvName`/`.drvPath` because modern nixpkgs no longer expose those passthru
   attributes; compared derivations with `==` instead.
+- 2026-10-07 — User referenced `TODO.md` with no instruction. Ambiguous: all items were
+  already checked off and the task marked superseded by the official `@upstash/context7-pi`
+  extension. Resolved as "clean up the completed task list": verified the claims locally
+  (`.pi/skills/context7/` gone, only `context7-pi` in `.pi/npm`, tools registered in-session),
+  deleted `TODO.md`, and dropped its row from the repo layout table.
+- 2026-10-07 — Outbound network outage: Context7 API (`resolve-library-id`) returned
+  "fetch failed" twice, and `git push` to github.com failed on both SSH (22) and HTTPS (443);
+  direct curls to github.com and api.upstash.com confirmed no external connectivity at all.
+  No workaround available; commit 707b815 (TODO.md removal + README update) is pending
+  locally — push once the network recovers. Context7 state was verified locally instead.
 
 <!-- agent notes appended below -->
