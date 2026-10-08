@@ -2,5 +2,10 @@
   "packages": [
     "npm:@baryonlabs/pi-agent-harness",
     "npm:@upstash/context7-pi"
-  ]
+  ],
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 4096,
+    "keepRecentTokens":8192
+  }
 }

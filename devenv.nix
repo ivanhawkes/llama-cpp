@@ -64,15 +64,6 @@ let
         --chat-template-kwargs '{"reasoning_effort":"xhigh"}' "$@" 2>&1; } | tee "$LOG"
   '';
 
-  # Headless browser MCP server for the pi harness (see .pi/mcp.json).
-  # Pinned by Nix so the harness's web tooling is reproducible. The wrapper
-  # bridges the store paths because mcp.json does not expand ${VAR} in args.
-  playwrightMcp = pkgs.writeShellScriptBin "playwright-mcp" ''
-    exec ${pkgs.playwright-mcp}/bin/playwright-mcp \
-      --headless \
-      --executable-path ${pkgs.chromium}/bin/chromium "$@"
-  '';
-
   # Pre-flight smoke validation runner
   smokeTest = pkgs.writeShellScriptBin "smoke-test" ''
     PORT=$SMOKE_TEST_PORT
@@ -136,7 +127,6 @@ in
   packages = [
     runServer
     smokeTest
-    playwrightMcp
 
     pkgs.fastfetch
     pkgs.curl
