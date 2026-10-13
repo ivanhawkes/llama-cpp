@@ -12,7 +12,7 @@ let
   llamaCppPackage = pkgs.llama-cpp.override { cudaSupport = true; };
 
   # Native local GPU inference wrapper
-  runServer = pkgs.writeShellScriptBin "hack" ''
+  hackServer = pkgs.writeShellScriptBin "hack" ''
     echo "🤖 Launching local GPU inference engine (Coding Optimization)..."
     export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
@@ -48,7 +48,7 @@ let
         -ngl 99 \
         -ctk q4_0 \
         -ctv q4_0 \
-        -c 90000 \
+        -c 98304 \
         --image-min-tokens 1024 \
         --flash-attn on \
         -ts 2,1 \
@@ -60,6 +60,53 @@ let
         --top-p 0.95 \
         --min-p 0.05 \
         --repeat-penalty 1.05 \
+        --metrics \
+        --chat-template-kwargs '{"reasoning_effort":"xhigh"}' "$@" 2>&1; } | tee "$LOG"
+  '';
+
+  # Native local GPU inference wrapper
+  designServer = pkgs.writeShellScriptBin "design" ''
+    echo "🤖 Launching local GPU inference engine (Coding Optimization)..."
+    export CUDA_DEVICE_ORDER=PCI_BUS_ID
+
+    if command -v nvidia-smi > /dev/null 2>&1; then
+      GPU0=$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader -i 0 | head -1)
+      case "$GPU0" in
+        *"5060 Ti"*) ;;
+        *) echo "❌ CUDA index 0 is '$GPU0', expected RTX 5060 Ti (16GB)." >&2
+           echo "   Check mapping: nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader" >&2
+           exit 1 ;;
+      esac
+
+      GPU_FREE=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader -i 0 | awk '{print $1}')
+      if [ "$GPU_FREE" -lt 12000 ]; then
+        echo "❌ Only $GPU_FREE MiB free on CUDA index 0; need >= 12000 MiB for the model." >&2
+        echo "   Another server is likely holding VRAM: nvidia-smi --query-gpu=index,memory.used,memory.free --format=csv,noheader" >&2
+        exit 1
+      fi
+    fi
+
+    export LD_LIBRARY_PATH="/run/opengl-driver/lib:/run/opengl-driver-32/lib:$LD_LIBRARY_PATH"
+
+    echo Llama.cpp version number:
+    echo ${llamaCppPackage}/bin/llama-server
+
+    LOG=/tmp/llama-server.log
+    [ -n "$LLAMA_SERVER_LOG" ] && LOG=$LLAMA_SERVER_LOG
+    { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] hack: session log -> $LOG"; \
+      ${llamaCppPackage}/bin/llama-server \
+        --log-timestamps \
+        --log-prefix \
+        -hf bartowski/Qwen2.5-Coder-32B-Instruct-abliterated-GGUF:Q4_K_M \
+        -ngl 99 \
+        -ctk q4_0 \
+        -ctv q4_0 \
+        -c 32768 \
+        --image-min-tokens 1024 \
+        --flash-attn on \
+        -ts 2,1 \
+        -sm tensor \
+        --agent \
         --metrics \
         --chat-template-kwargs '{"reasoning_effort":"xhigh"}' "$@" 2>&1; } | tee "$LOG"
   '';
@@ -125,7 +172,8 @@ in
 
   # 2. System Packages & Git Tooling
   packages = [
-    runServer
+    hackServer
+    designServer
     smokeTest
 
     pkgs.fastfetch
